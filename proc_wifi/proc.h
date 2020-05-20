@@ -21,16 +21,16 @@ void proc_setup() {
 }
 
 void proc_loop() {
-  //check if there are any new clients
-  if (tcpServer.hasClient()) {
-    //find free/disconnected spot
+  uint8_t ch;
+  if (tcpServer.hasClient()) { //有新的连接进来
+    //寻找一个空闲或者断开的位置
     int i;
     for (i = 0; i < MAX_SRV_CLIENTS; i++)
       if (!tcpClients[i]) { // equivalent to !tcpClients[i].connected()
         tcpClients[i] = tcpServer.available();
         break;
       }
-    //no free/disconnected spot so reject
+    //没有位置， busy
     if (i == MAX_SRV_CLIENTS) {
       tcpServer.available().println("busy");
       // hints: tcpServer.available() is a WiFiClient with short-term scope
@@ -45,7 +45,10 @@ void proc_loop() {
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     while (tcpClients[i].available() && Serial.availableForWrite() > 0) {
       // working char by char is not very efficient
-      Serial.write(tcpClients[i].read());
+      ch=tcpClients[i].read();
+      Serial.write(ch);
+      for(int i1=0;i1<MAX_SRV_CLIENTS; i1++)
+        if(i1 != i && tcpClients[i1]) tcpClients[i1].write(ch);
     }
 
   // determine maximum output size "fair TCP use"
