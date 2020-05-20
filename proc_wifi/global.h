@@ -12,8 +12,9 @@ uint16_t http_get(uint8_t);
 void send_ram();
 float get_batt();
 float v;
-uint8_t hour=0,minute=0,sec=0;
+uint8_t hour=0,minute=0,sec=56;
 void timer1s() {
+  char disp_buf[6];
   if (timer1 > 0) timer1--;//定时器1 测温
   if (timer2 > 0) timer2--;//定时器2 链接远程服务器
   sec++;
@@ -26,7 +27,9 @@ void timer1s() {
       if(hour >= 24);
       hour = 0;
     }
-  get_temp();
+    get_temp();
+    sprintf(disp_buf,"%02d-%02d",hour,minute);
+    disp(disp_buf);
   }
 }
 
