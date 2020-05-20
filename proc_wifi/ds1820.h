@@ -86,7 +86,7 @@ bool get_temp() {
         ret = false;
       }
 
-    } else
+    }
   }
   if (ret == true) {
     digitalWrite(ds_pin, LOW);

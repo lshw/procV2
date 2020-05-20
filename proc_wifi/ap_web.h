@@ -261,7 +261,6 @@ void http_listen() {
     } else if (upload.status == UPLOAD_FILE_END) {
       Update.end(true);
       }
-    }
     yield();
   });
   server.onNotFound(handleNotFound);
