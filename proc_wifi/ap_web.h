@@ -162,28 +162,18 @@ void httpsave() {
       data.replace("\xa3\xba", ":"); //gbk :
       data.replace("\xa1\x47", ":"); //big5 :
       if (data.length() > 8) {
-        Serial.println("data:[" + data + "]");
-        //  Serial.print(data);
-        // Serial.println("]");
         fp = SPIFFS.open("/ssid.txt", "w");
         fp.println(data);
         fp.close();
         fp = SPIFFS.open("/ssid.txt", "r");
-        Serial.print("保存wifi设置到文件/ssid.txt ");
-        Serial.print(fp.size());
-        Serial.println("字节");
         fp.close();
       }
     } else if (server.argName(i).compareTo("url") == 0) {
       url = server.arg(i);
       url.trim();
       if (url.length() == 0) {
-        Serial.println("删除url0设置");
         SPIFFS.remove("/url.txt");
       } else {
-        Serial.print("url0:[");
-        Serial.print(url);
-        Serial.println("]");
         fp = SPIFFS.open("/url.txt", "w");
         fp.println(url);
         fp.close();
@@ -192,12 +182,8 @@ void httpsave() {
       url = server.arg(i);
       url.trim();
       if (url.length() == 0) {
-        Serial.println("删除url1设置");
         SPIFFS.remove("/url1.txt");
       } else {
-        Serial.print("url1:[");
-        Serial.print(url);
-        Serial.println("]");
         fp = SPIFFS.open("/url1.txt", "w");
         fp.println(url);
         fp.close();
@@ -213,8 +199,6 @@ void AP() {
   // Go into software AP mode.
   struct softap_config cfgESP;
 
-  Serial.println("AP模式启动.\r\nssid:disp\r\npasswd:none");
-
   while (!wifi_softap_get_config(&cfgESP)) {
     system_soft_wdt_feed();
   }
@@ -222,11 +206,8 @@ void AP() {
   wifi_softap_set_config(&cfgESP);
   delay(10);
   WiFi.softAP("disp", "");
-  Serial.print("IP地址: ");
-  Serial.println(WiFi.softAPIP());
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());
-  Serial.println("泛域名dns服务器启动");
   wifi_set_sleep_type(LIGHT_SLEEP_T);
   http_listen();
 }
@@ -244,7 +225,6 @@ void http_listen() {
     send_ram();
     server.sendHeader("Connection", "close");
     if (Update.hasError()) {
-      Serial.println("上传失败");
       server.send(200, "text/html", "<html>"
                   "<head>"
                   "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -264,8 +244,6 @@ void http_listen() {
                   "</body>"
                   "</html>"
                  );
-      Serial.println("上传成功");
-      Serial.flush();
       ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
       ESP.restart();
@@ -273,34 +251,22 @@ void http_listen() {
   }, []() {
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
-      Serial.setDebugOutput(true);
       WiFiUDP::stopAll();
-      Serial.printf("Update: %s\r\n", upload.filename.c_str());
       uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-      if (!Update.begin(maxSketchSpace)) { //start with max available size
-        Update.printError(Serial);
-      }
+      Update.begin(maxSketchSpace); //start with max available size
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       sprintf(disp_buf, "UP.%d", upload.totalSize / 1000);
       disp(disp_buf);
-      Serial.println("size:" + String(upload.totalSize));
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-      }
+      Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
-      } else {
-        Update.printError(Serial);
+      Update.end(true);
       }
-      Serial.setDebugOutput(false);
     }
     yield();
   });
   server.onNotFound(handleNotFound);
   server.begin();
 
-  Serial.printf("HTTP服务器启动! \r\n");
 }
 void http_loop() {
   server.handleClient();
@@ -313,26 +279,16 @@ void ap_loop() {
   if (ms0 < millis()) {
     get_batt();
     system_soft_wdt_feed ();
-    Serial.print("vcc:");
-    Serial.print(get_batt());
-    Serial.print("V,millis()=");
-    Serial.println(ms0);
     ms0 = (ap_on_time - millis()) / 1000;
     if (ms0 < 10) sprintf(disp_buf, "AP  %d", ms0);
     else if (ms0 < 100) sprintf(disp_buf, "AP %d", ms0);
     else sprintf(disp_buf, "AP%d", ms0);
     ms0 = millis() + 1000;
-    Serial.println(disp_buf);
     disp(disp_buf);
 
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
       else {
-        Serial.print("batt:");
-        Serial.print(v);
-        Serial.print("V,millis()=");
-        Serial.println(millis());
-        Serial.println("reboot");
         ram_buf[0] = 0;
         disp("00000");
         ht16c21_cmd(0x84, 0);

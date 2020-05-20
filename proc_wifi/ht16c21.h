@@ -33,9 +33,6 @@ void disp(char *str) {
     0x11, 0x13, 0x12, 0x14, 0x16, 0x15, 0x17, 0x10  //第5位数字...
   };
   uint8_t dispbyte, ram, i, dian;
-  Serial.print("disp [");
-  Serial.print(str);
-  Serial.println("]");
   i = strlen(str);
   if (i > 10)
     i = 10;
@@ -144,15 +141,10 @@ bool load_ram() {
   Wire.write(byte(0)); //read ram
   Wire.endTransmission();
   Wire.requestFrom(HT1621, 10);
-  Serial.print("LCD_RAM=");
   for (uint8_t i = 0; i < 10; i++) {
     ram_buf[i] = Wire.read();
-    Serial.print(" ");
-    if (ram_buf[i] < 0x10) Serial.write('0');
-    Serial.print(ram_buf[i], HEX);
   }
   Wire.endTransmission();
-  Serial.println();
 
   //0,3,4,7,8 校验
   return ram_check();

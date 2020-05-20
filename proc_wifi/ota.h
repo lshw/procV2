@@ -24,35 +24,17 @@ void ota_setup() {
     ram_buf[0] = 0;
     send_ram();
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
     type = "";
   });
   ArduinoOTA.onEnd([]() {
     ht16c21_cmd(0x88, 1); //闪烁
-    Serial.println("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     sprintf(disp_buf, "OTA.%02d", progress * 99 / total );
     disp(disp_buf);
   });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
   ArduinoOTA.begin();
   wifi_set_sleep_type(LIGHT_SLEEP_T);
-  Serial.println("Ready");
 }
 void zmd() {
   uint8_t i, i0, i1;

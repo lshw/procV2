@@ -1,41 +1,14 @@
+#ifndef __PROC_H__
+#define __PROC_H__
+
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
-uint8_t add_count = 0;
-uint8_t pwm;
-uint16_t timer1 = 0; //秒 定时测温
-uint16_t timer2 = 0; //秒
-uint16_t volatile dogcount = 0; //超时重启，主程序循环清零，不清零的话100秒重启系统
-
-#include "Ticker.h"
-Ticker _myTicker,pcResetTicker,pcPowerTicker;
-
-void pcPowerUp() {
-digitalWrite(PC_POWER,LOW);
-}
-
-void pcResetUp() {
-digitalWrite(PC_RESET,LOW);
-}
-
-void timer1s {
-  if (timer1 > 0) timer1--;//定时器1 测温
-  if (timer2 > 0) timer2--;//定时器2 链接远程服务器
-}
-
 #define S_TCP  1
 #define S_SERIAL 0
 
-uint8_t remote_cycle;
-
 void proc_setup() {
-  if(!file_exists("pwm.txt")) {
-  pwm=128;
-  file_put_content("pwm.txt","128");
-  }else
-  pwm = atoi(file_get_content("pwm.txt"));//todo
-  analogWrite(PWM, pwm);
   pinMode(_24V_OUT, OUTPUT);
   digitalWrite(_24V_OUT, HIGH); //默认24V开启输出
   pinMode(PC_RESET, OUTPUT);
@@ -52,7 +25,6 @@ void proc_setup() {
   server.begin();
   server.setNoDelay(true);
   remote_cycle = eeprom_read(REMOTE_CYCLE);
-  _myTicker.attach(1,timer1s);
 }
 
 void proc_loop() {
@@ -204,3 +176,5 @@ void run_script( Stream * s, uint8_t script_n) {
     ch = eeprom_read(eeprom_addr);
   }
 }
+
+#endif //__PROC_H__

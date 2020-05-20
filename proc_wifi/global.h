@@ -2,16 +2,29 @@
 #define __GLOBAL_H__
 #include "config.h"
 #include "ht16c21.h"
+uint16_t timer1 = 0; //秒 定时测温
+uint16_t timer2 = 0; //秒
+#include "Ticker.h"
+Ticker _myTicker,pcResetTicker,pcPowerTicker;
 extern char ram_buf[10];
 void send_ram();
 float get_batt();
 float v;
-void timer300ms(){
-digitalWrite(PC_RESET,!digitalRead(PC_RESET));
+
+void timer1s() {
+  if (timer1 > 0) timer1--;//定时器1 测温
+  if (timer2 > 0) timer2--;//定时器2 链接远程服务器
 }
 
-void settimer300ms(){
+void pcPowerUp() {
+digitalWrite(PC_POWER,LOW);
 }
+
+void pcResetUp() {
+digitalWrite(PC_RESET,LOW);
+}
+
+
 void test(){
   pinMode(_24V_OUT,OUTPUT);
   pinMode(PC_RESET,OUTPUT);
@@ -19,7 +32,6 @@ void test(){
   digitalWrite(_24V_OUT,LOW);
   digitalWrite(PC_RESET,HIGH);
   digitalWrite(PC_POWER,LOW);
-  settimer300ms();
   delay(10000); 
 analogWriteFreq(400);
   analogWrite(PWM,512);

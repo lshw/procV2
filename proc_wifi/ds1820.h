@@ -10,31 +10,19 @@ uint8_t ds_pin = 0;
 bool ds_init() {
   uint8_t i;
   File fp;
-  char key[17];
   SPIFFS.begin();
   temp[0] = -999.0;
   memset(dsn, 0, sizeof(dsn));
   oneWire.begin(ds_pin);
   if (oneWire.search(dsn[0])) {
-    i = 0;
-    Serial.print("DS18B20[" + String(i) + "]=");
-    sprintf(key, "%02x%02x%02x%02x%02x%02x%02x%02x", dsn[i][0], dsn[i][1], dsn[i][2], dsn[i][3], dsn[i][4], dsn[i][5], dsn[i][6], dsn[i][7]);
-    Serial.println(key);
     i = 1;
   }
-  Serial.print("ds_pin=");
-  Serial.println(ds_pin);
   for (; i < 32; i++) {
     if (!oneWire.search(dsn[i]))
       break;
     temp[i] = -999.0;
-    Serial.print("DS18B20[" + String(i) + "]=");
-    sprintf(key, "%02x%02x%02x%02x%02x%02x%02x%02x", dsn[i][0], dsn[i][1], dsn[i][2], dsn[i][3], dsn[i][4], dsn[i][5], dsn[i][6], dsn[i][7]);
-    Serial.println(key);
   }
   if (dsn[0][0] == 0) {
-    Serial.println("没找到ds1820.");
-    Serial.println();
     SPIFFS.end();
     return false;
   }
@@ -99,7 +87,6 @@ bool get_temp() {
       }
 
     } else
-      Serial.println("温度" + String(n) + "=" + String(temp[n]));
   }
   if (ret == true) {
     digitalWrite(ds_pin, LOW);
