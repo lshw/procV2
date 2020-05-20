@@ -87,13 +87,8 @@ bool wifi_connect() {
     delay(1000);
     system_soft_wdt_feed ();
     if (i % 2 == 0) {
-      if (temp_ok == false) temp_ok = get_temp();
     } else
       i++;
-  }
-  if (temp_ok == false) {
-    if (millis() < (temp_start + 2000)) delay(temp_start + 2000 - millis());
-    temp_ok = get_temp();
   }
   ht16c21_cmd(0x88, 0); //停止闪烁
   if (WiFiMulti.run() == WL_CONNECTED)

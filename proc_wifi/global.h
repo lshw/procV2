@@ -2,18 +2,32 @@
 #define __GLOBAL_H__
 #include "config.h"
 #include "ht16c21.h"
+#include "ds1820.h"
+#include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
-#include "Ticker.h"
 Ticker _myTicker,pcResetTicker,pcPowerTicker;
 extern char ram_buf[10];
+uint16_t http_get(uint8_t);
 void send_ram();
 float get_batt();
 float v;
-
+uint8_t hour=0,minute=0,sec=0;
 void timer1s() {
   if (timer1 > 0) timer1--;//定时器1 测温
   if (timer2 > 0) timer2--;//定时器2 链接远程服务器
+  sec++;
+  if(sec >= 60) {
+    sec = 0;
+    minute++;
+    if (minute >= 60) {
+      minute = 0;
+      hour++;
+      if(hour >= 24);
+      hour = 0;
+    }
+  get_temp();
+  }
 }
 
 void pcPowerUp() {
@@ -24,6 +38,12 @@ void pcResetUp() {
 digitalWrite(PC_RESET,LOW);
 }
 
+void wget() {
+  uint16_t httpCode = http_get((ram_buf[7] >> 1) & 1); //先试试上次成功的url
+  if (httpCode < 200  || httpCode >= 400) {
+    httpCode = http_get((~ram_buf[7] >> 1) & 1); //再试试另一个的url
+  }
+}
 
 void test(){
   pinMode(_24V_OUT,OUTPUT);
@@ -32,7 +52,6 @@ void test(){
   digitalWrite(_24V_OUT,LOW);
   digitalWrite(PC_RESET,HIGH);
   digitalWrite(PC_POWER,LOW);
-  delay(10000); 
 analogWriteFreq(400);
   analogWrite(PWM,512);
   for(uint8_t i=20;i>0;i--) {

@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.52"
+#define VER "1.53"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -7,16 +7,14 @@ extern "C" {
 #include "config.h"
 #include "global.h"
 
-bool temp_ok = false; //测温ok
 bool lcd_flash = false;
 extern char ip_buf[30];
-uint32_t temp_start;
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 char disp_buf[22];
 uint32_t next_disp = 1800; //下次开机
 String hostname = HOSTNAME;
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
-//0,1-正常 2-AP 3-OTA  4-http update
+//0,1-正常 2-OTA
 #define OTA_MODE 2
 
 #include "fs.h"
@@ -25,6 +23,7 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 #include "wifi_client.h"
 #include "ap_web.h"
 #include "ht16c21.h"
+#include "proc.h"
 void setup()
 {
   uint8_t i;
@@ -37,6 +36,7 @@ void setup()
   ht16c21_setup();
   get_batt();
   proc = ram_buf[0];
+  proc_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
@@ -55,48 +55,22 @@ void setup()
   send_ram();
   //更新时闪烁
   ht16c21_cmd(0x88, 1); //闪烁
-  if (wifi_connect() == false) {
-    if (proc == OTA_MODE) {
-      ram_buf[0] = 0;
-      send_ram();
-      ESP.restart();
-    }
-    ram_buf[9] |= 0x10; //x1
-    ram_buf[0] = 0;
-    send_ram();
-    poweroff(1800);
-    return;
+  if (wifi_connect()) {
+  ht16c21_cmd(0x88, 0); //停止闪烁
   }
 
-  if (temp_ok == false) {
-    delay(temp_start + 2000 - millis());
-    temp_ok = get_temp();
-  }
-  ht16c21_cmd(0x88, 0); //停止闪烁
   if (proc == OTA_MODE) {
     ota_setup();
     return;
   }
-  uint16_t httpCode = http_get((ram_buf[7] >> 1) & 1); //先试试上次成功的url
-  if (httpCode < 200  || httpCode >= 400) {
-    httpCode = http_get((~ram_buf[7] >> 1) & 1); //再试试另一个的url
-  }
-  if (httpCode < 200 || httpCode >= 400) {
-    SPIFFS.begin();
-    ram_buf[0] = 0;
-    send_ram();
-    poweroff(3600);
-    return;
-  }
-  if (v < 3.6)
-    ht16c21_cmd(0x88, 2); //0-不闪 1-2hz 2-1hz 3-0.5hz
-  else
-    ht16c21_cmd(0x88, 0); //0-不闪 1-2hz 2-1hz 3-0.5hz
-  if (next_disp < 60) next_disp = 1800;
-  poweroff(next_disp);
+  get_temp();
+  wget();
+  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
+
 void loop()
 {
+proc_loop();
   switch (proc) {
     case OTA_MODE:
       if (WiFiMulti.run() == WL_CONNECTED)
