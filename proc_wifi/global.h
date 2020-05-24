@@ -24,8 +24,8 @@ void timer1s() {
     if (minute >= 60) {
       minute = 0;
       hour++;
-      if(hour >= 24);
-      hour = 0;
+      if(hour >= 24)
+        hour = 0;
     }
     get_temp();
     sprintf(disp_buf,"%02d-%02d",hour,minute);
