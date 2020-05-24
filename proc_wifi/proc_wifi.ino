@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.53"
+#define VER "1.54"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -70,7 +70,7 @@ void setup()
 
 void loop()
 {
-proc_loop();
+//  proc_loop();
   switch (proc) {
     case OTA_MODE:
       if (WiFiMulti.run() == WL_CONNECTED)

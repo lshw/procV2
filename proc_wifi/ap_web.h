@@ -205,7 +205,7 @@ void AP() {
   cfgESP.authmode = AUTH_OPEN;//无密码模式
   wifi_softap_set_config(&cfgESP);
   delay(10);
-  WiFi.softAP("disp", "");
+  WiFi.softAP("proc", "");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());
   wifi_set_sleep_type(LIGHT_SLEEP_T);
