@@ -12,14 +12,16 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 DNSServer dnsServer;
 ESP8266WebServer server(80);
-void http204() {
-  server.send(204, "", "");
-  server.client().stop();
-}
+const char* www_username = "root";
+const char* www_password = "admin";
+
 uint32_t ap_on_time = 120000;
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
+  if (!server.authenticate(www_username, www_password))
+    return server.requestAuthentication();
+
   int n = WiFi.scanNetworks();
   if (n > 0) {
     wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
@@ -86,6 +88,8 @@ void handleNotFound() {
   File fp;
   int ch;
   String message;
+  if (!server.authenticate(www_username, www_password))
+    return server.requestAuthentication();
   SPIFFS.begin();
   if (SPIFFS.exists(server.uri().c_str())) {
     fp = SPIFFS.open(server.uri().c_str(), "r");
@@ -109,7 +113,7 @@ void handleNotFound() {
   server.client().stop();
   message = "";
 }
-void http_add_ssid() {
+void add_ssid_php() {
   File fp;
   String ssid, data;
   char ch;
@@ -149,9 +153,11 @@ void http_add_ssid() {
   server.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
 
 }
-void httpsave() {
+void save_php() {
   File fp;
   String url, data;
+  if (!server.authenticate(www_username, www_password))
+    return server.requestAuthentication();
   SPIFFS.begin();
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i).compareTo("data") == 0) {
@@ -215,11 +221,12 @@ void http_listen() {
   server.begin();
 
   server.on("/", handleRoot);
-  server.on("/save.php", httpsave); //保存设置
-  server.on("/add_ssid.php", http_add_ssid); //保存设置
-  server.on("/generate_204", http204);//安卓上网检测
+  server.on("/save.php", save_php); //保存设置
+  server.on("/add_ssid.php", add_ssid_php); //保存设置
 
   server.on("/update.php", HTTP_POST, []() {
+  if (!server.authenticate(www_username, www_password))
+    return server.requestAuthentication();
     ram_buf[0] = 0;
     send_ram();
     server.sendHeader("Connection", "close");
