@@ -19,7 +19,6 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 
 #include "fs.h"
 #include "ota.h"
-#include "ds1820.h"
 #include "wifi_client.h"
 #include "ap_web.h"
 #include "ht16c21.h"
@@ -32,7 +31,6 @@ void setup()
   Serial.begin(115200);
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
-  if (!ds_init() && !ds_init()) ds_init();
   ht16c21_setup();
   get_batt();
   proc = ram_buf[0];
@@ -63,7 +61,6 @@ void setup()
     ota_setup();
     return;
   }
-  get_temp();
   wget();
   wifi_set_sleep_type(LIGHT_SLEEP_T);
 }

@@ -41,10 +41,9 @@ void handleRoot() {
                 + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp; "
                 + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp; "
                 + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; "
-                + "电压:<mark>" + String(v) + "</mark>V &nbsp; ";
-if(temp[0]<100 && temp[0] >-100)    wifi_stat += "温度:<mark>" + String(temp[0]) + "</mark>&#8451";
-wifi_stat +="<br>";
+                + "电压:<mark>" + String(v) + "</mark>V<br>";
 }
+
   server.send(200, "text/html", "<html>"
               "<head>"
               "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"

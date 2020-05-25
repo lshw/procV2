@@ -2,7 +2,6 @@
 #define __GLOBAL_H__
 #include "config.h"
 #include "ht16c21.h"
-#include "ds1820.h"
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
@@ -27,7 +26,6 @@ void timer1s() {
       if(hour >= 24)
         hour = 0;
     }
-    get_temp();
     sprintf(disp_buf,"%02d-%02d",hour,minute);
     disp(disp_buf);
   }

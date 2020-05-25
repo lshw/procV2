@@ -109,24 +109,6 @@ uint16_t http_get(uint8_t no) {
     url0 += '?';
   url0 += "ver="  VER  "&sn=" + hostname ;
 
-/*
-          + "&ssid=" + String(WiFi.SSID())
-          + "&bssid=" + WiFi.BSSIDstr()
-          + "&batt=" + String(v)
-          + "&rssi=" + String(WiFi.RSSI())
-          + "&temp=" + String(temp[0]);
-  if (dsn[1][0] != 0) {
-    url0 += "&temps=";
-    for (uint8_t i = 0; i < 32; i++) {
-      if (dsn[i][0] == 0) continue;
-      if (i > 0)
-        url0 += ",";
-      sprintf(key, "%02x%02x%02x:", dsn[i][0], dsn[i][6], dsn[i][7]);
-      url0 += key + String(temp[i]);
-    }
-  }
-*/
-
   http.begin( url0 ); //HTTP提交
   http.setTimeout(4000);
   int httpCode;
