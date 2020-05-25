@@ -70,7 +70,7 @@ wifi_stat +="<br>";
               "输入ssid:passwd(可以多行多个)"
               "<input type=submit value=save><br>"
               "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-              "可以设置自己的服务器地址(清空恢复)<br>"
+              "可以设置自己的升级服务器地址(清空恢复)<br>"
               "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
               "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
               "<input type=submit name=submit value=save>"

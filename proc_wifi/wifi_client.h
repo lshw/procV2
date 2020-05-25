@@ -107,7 +107,9 @@ uint16_t http_get(uint8_t no) {
     url0 += '&';
   else
     url0 += '?';
-  url0 += "ver="  VER  "&sn=" + hostname
+  url0 += "ver="  VER  "&sn=" + hostname ;
+
+/*
           + "&ssid=" + String(WiFi.SSID())
           + "&bssid=" + WiFi.BSSIDstr()
           + "&batt=" + String(v)
@@ -123,6 +125,7 @@ uint16_t http_get(uint8_t no) {
       url0 += key + String(temp[i]);
     }
   }
+*/
 
   http.begin( url0 ); //HTTP提交
   http.setTimeout(4000);
