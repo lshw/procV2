@@ -10,7 +10,7 @@ date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
 ver=$date-${a:0:7}
 echo $ver
 export COMMIT=$ver
-echo "#define GIT_COMMIT_ID \"$ver\"" > proc_wifi/commit.h
+#echo "#define GIT_COMMIT_ID \"$ver\"" > proc_wifi/commit.h
 
 arduino=/opt/arduino-1.8.12
 arduinoset=~/.arduino15

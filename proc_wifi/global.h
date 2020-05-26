@@ -5,38 +5,50 @@
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
-Ticker _myTicker,pcResetTicker,pcPowerTicker,ota_test;
+Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
 extern char ram_buf[10];
 uint16_t http_get(uint8_t);
 void send_ram();
+void test();
+uint8_t test_t = 0;
 float get_batt();
 float v;
-uint8_t hour=0,minute=0,sec=56;
+uint8_t hour = 0, minute = 58, sec = 56;
+uint8_t timer3 = 10;
 void timer1s() {
   char disp_buf[6];
+  if (timer3 > 0) {
+    if (timer3 == 1) {
+      ram_buf[0] = 0;
+      send_ram();
+    }
+    timer3--;
+  }
   if (timer1 > 0) timer1--;//定时器1 测温
   if (timer2 > 0) timer2--;//定时器2 链接远程服务器
   sec++;
-  if(sec >= 60) {
+  if (sec >= 60) {
     sec = 0;
     minute++;
     if (minute >= 60) {
+      test_t = 0;
+      ota_test.attach(0.5, test);
       minute = 0;
       hour++;
-      if(hour >= 24)
+      if (hour >= 24)
         hour = 0;
     }
-    sprintf(disp_buf,"%02d-%02d",hour,minute);
+    sprintf(disp_buf, "%02d-%02d", hour, minute);
     disp(disp_buf);
   }
 }
 
 void pcPowerUp() {
-digitalWrite(PC_POWER,LOW);
+  digitalWrite(PC_POWER, LOW);
 }
 
 void pcResetUp() {
-digitalWrite(PC_RESET,LOW);
+  digitalWrite(PC_RESET, LOW);
 }
 
 void wget() {
@@ -45,33 +57,40 @@ void wget() {
     httpCode = http_get((~ram_buf[7] >> 1) & 1); //再试试另一个的url
   }
 }
-uint8_t test_t=0;
-void test(){
-  if(test_t>20) return;
-  if(test_t == 20) {
-    test_t++;
-    digitalWrite(PC_POWER,LOW);
-    digitalWrite(_24V_OUT,LOW);
-    digitalWrite(PC_RESET,LOW);
+void test() {
+  if (test_t > 22)  {
+    pinMode(PWM, OUTPUT);
+    digitalWrite(PWM, LOW);
+    ota_test.detach();
     return;
   }
-  if(test_t == 0) {
+  if (test_t == 20) {
+    test_t++;
+    digitalWrite(PC_POWER, LOW);
+    digitalWrite(_24V_OUT, LOW);
+    digitalWrite(PC_RESET, LOW);
+    analogWrite(PWM, 20);
+    return;
+  }
+  if (test_t == 0) {
     analogWriteFreq(400);
-    analogWrite(PWM,512);
-    digitalWrite(PC_POWER,LOW);
-    digitalWrite(_24V_OUT,HIGH);
-    digitalWrite(PC_RESET,LOW);
+    analogWrite(PWM, 512);
+    digitalWrite(PC_POWER, LOW);
+    digitalWrite(_24V_OUT, HIGH);
+    digitalWrite(PC_RESET, LOW);
   }
   test_t++;
-  bool s=digitalRead(_24V_OUT);
-  digitalWrite(_24V_OUT,digitalRead(PC_POWER));
-  digitalWrite(PC_POWER,digitalRead(PC_RESET));
-  digitalWrite(PC_RESET,s);
-  if(test_t % 2) analogWrite(PWM,512+(20-test_t)*20);
-  else analogWrite(PWM,512-(20-test_t)*20);
+  bool s = digitalRead(_24V_OUT);
+  digitalWrite(_24V_OUT, digitalRead(PC_POWER));
+  digitalWrite(PC_POWER, digitalRead(PC_RESET));
+  digitalWrite(PC_RESET, s);
+  if (test_t <= 20) {
+    if (test_t % 2) analogWrite(PWM, 512 + (20 - test_t) * 10);
+    else analogWrite(PWM, 512 - (20 - test_t) * 10);
+  }
 }
 void poweroff(uint32_t sec) {
-  delay(sec*1000);
+  delay(sec * 1000);
   ESP.restart();
 }
 float get_batt() {//电压

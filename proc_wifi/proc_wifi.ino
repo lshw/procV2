@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.55"
+#define VER "1.56"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -11,8 +11,8 @@ bool lcd_flash = false;
 extern char ip_buf[30];
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 char disp_buf[22];
-uint32_t next_disp = 1800; //下次开机
 String hostname = HOSTNAME;
+void httpd_listen();
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
 //0,1-正常 2-OTA
 #define OTA_MODE 2
@@ -32,8 +32,7 @@ void setup()
   digitalWrite(PC_RESET, LOW);
   pinMode(PC_POWER, OUTPUT);
   digitalWrite(PC_POWER, LOW);
-  _myTicker.attach(1,timer1s);
-  _myTicker.attach(0.5,test);
+  _myTicker.attach(1, timer1s);
   Serial.begin(115200);
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
@@ -47,8 +46,11 @@ void setup()
     case OTA_MODE:
       wdt_disable();
       ram_buf[0] = 0;//ota以后，
+      send_ram();
       disp(" OTA ");
+      ota_test.attach(0.5, test);
       ota_setup();
+      httpd_listen();
       return;
       break;
     default:
@@ -60,17 +62,25 @@ void setup()
   }
   send_ram();
   wget();
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
-
+bool httpd_up = false;
 void loop()
 {
   switch (proc) {
     case OTA_MODE:
-      if (WiFiMulti.run() == WL_CONNECTED)
+      httpd_loop();
+      if (wifi_connected_is_ok())
         ota_loop();
       else
         ap_loop();
       break;
+    default:
+      if (wifi_connected_is_ok()) {
+        if (!httpd_up) {
+          httpd_listen();
+          httpd_up = true;
+        }
+        httpd_loop();
+      }
   }
 }

@@ -39,50 +39,49 @@ void handleRoot() {
     }
     wifi_scan += "<br>";
   }
-
-  if (WiFiMulti.run() == WL_CONNECTED) {
+  if (wifi_connected_is_ok()) {
     wifi_stat = "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp; "
                 + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp; "
                 + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp; "
                 + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; "
                 + "电压:<mark>" + String(v) + "</mark>V<br>";
-}
+  }
 
   httpd.send(200, "text/html", "<html>"
-              "<head>"
-              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-              "<script>"
-              "function get_passwd(ssid) {"
-              "var passwd=prompt('输入 '+ssid+' 的密码:');"
-              "if(passwd==null) return false;"
-              "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
-              "else return false;"
-              "return true;"
-              "}"
-              "function select_ssid(ssid){"
-              "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
-              "}"
-              "</script>"
-              "</head>"
-              "<body>"
-              "SN:<mark>" + hostname + "</mark> &nbsp; "
-              "版本:<mark>" VER "</mark>"
-              "<hr>"
-              + wifi_stat + "<hr>" + wifi_scan +
-              "<hr><form action=/save.php method=post>"
-              "输入ssid:passwd(可以多行多个)"
-              "<input type=submit value=save><br>"
-              "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-              "可以设置自己的升级服务器地址(清空恢复)<br>"
-              "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-              "<input type=submit name=submit value=save>"
-              "</form>"
-              "<hr>"
-              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-              "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-              "<hr></body>"
-              "</html>");
+             "<head>"
+             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             "<script>"
+             "function get_passwd(ssid) {"
+             "var passwd=prompt('输入 '+ssid+' 的密码:');"
+             "if(passwd==null) return false;"
+             "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
+             "else return false;"
+             "return true;"
+             "}"
+             "function select_ssid(ssid){"
+             "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
+             "}"
+             "</script>"
+             "</head>"
+             "<body>"
+             "SN:<mark>" + hostname + "</mark> &nbsp; "
+             "版本:<mark>" VER "</mark>"
+             "<hr>"
+             + wifi_stat + "<hr>" + wifi_scan +
+             "<hr><form action=/save.php method=post>"
+             "输入ssid:passwd(可以多行多个)"
+             "<input type=submit value=save><br>"
+             "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
+             "可以设置自己的升级服务器地址(清空恢复)<br>"
+             "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
+             "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
+             "<input type=submit name=submit value=save>"
+             "</form>"
+             "<hr>"
+             "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+             "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+             "<hr></body>"
+             "</html>");
   httpd.client().stop();
   ap_on_time = millis() + 200000;
 }
@@ -216,7 +215,6 @@ void AP() {
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());
   wifi_set_sleep_type(LIGHT_SLEEP_T);
-  void httpd_listen();
 }
 void httpd_listen() {
 
@@ -227,31 +225,31 @@ void httpd_listen() {
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 
   httpd.on("/update.php", HTTP_POST, []() {
-  if (!httpd.authenticate(www_username, www_password))
-    return httpd.requestAuthentication();
+    if (!httpd.authenticate(www_username, www_password))
+      return httpd.requestAuthentication();
     ram_buf[0] = 0;
     send_ram();
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       httpd.send(200, "text/html", "<html>"
-                  "<head>"
-                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                  "</head>"
-                  "<body>"
-                  "升级失败 <a href=/>返回</a>"
-                  "</body>"
-                  "</html>"
-                 );
+                 "<head>"
+                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                 "</head>"
+                 "<body>"
+                 "升级失败 <a href=/>返回</a>"
+                 "</body>"
+                 "</html>"
+                );
     } else {
       httpd.send(200, "text/html", "<html>"
-                  "<head>"
-                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                  "</head>"
-                  "<body>"
-                  "<script>setTimeout(function(){ alert('升级成功!'); }, 15000); </script>"
-                  "</body>"
-                  "</html>"
-                 );
+                 "<head>"
+                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                 "</head>"
+                 "<body>"
+                 "<script>setTimeout(function(){ alert('升级成功!'); }, 15000); </script>"
+                 "</body>"
+                 "</html>"
+                );
       ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
       ESP.restart();
@@ -268,7 +266,7 @@ void httpd_listen() {
       Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
       Update.end(true);
-      }
+    }
     yield();
   });
   httpd.onNotFound(handleNotFound);

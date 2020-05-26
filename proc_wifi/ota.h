@@ -20,7 +20,6 @@ void ota_setup() {
     } else { // U_SPIFFS
       type = "filesystem";
     }
-    ram_buf[0] = 0;
     send_ram();
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
     type = "";
@@ -78,8 +77,6 @@ void ota_loop() {
       get_batt();
       zmd(); //"OTA 192.168.12.126  " 走马灯填充disp_buf
       sec1 = sec0;
-      if (sec0 > 5)
-        ram_buf[0] = 0;
       disp(disp_buf);
       system_soft_wdt_feed ();
     }

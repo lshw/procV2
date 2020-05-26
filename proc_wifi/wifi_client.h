@@ -8,7 +8,6 @@
 extern char ram_buf[10];
 extern uint8_t rxBuf[256];
 void AP();
-bool wifi_connected = false;
 bool http_update();
 void send_ram();
 void set_ram_check();
@@ -78,7 +77,7 @@ void wifi_setup() {
     SPIFFS.end();
   }
 }
-bool wifi_connected_is_ok(){
+bool wifi_connected_is_ok() {
   if (WiFiMulti.run() == WL_CONNECTED)
   {
     ht16c21_cmd(0x88, 0); //停止闪烁
@@ -109,7 +108,6 @@ uint16_t http_get(uint8_t no) {
     // httpCode will be negative on error
     if (httpCode >= 200 && httpCode <= 299) {
       // HTTP header has been send and Server response header has been handled
-      ram_buf[0] = 0;
       if (no == 0) ram_buf[7] &= ~2;
       else ram_buf[7] |= 2; //bit2表示上次完成通讯用的是哪个url 0:url0 2:url1
       send_ram();
@@ -127,20 +125,9 @@ uint16_t http_get(uint8_t no) {
           SPIFFS.begin();
           if (http_update() == false)
             http_update();
-            delay(180);
-            ESP.restart();
+          delay(180);
+          ESP.restart();
         }
-        next_disp = disp_buf[i1 + 1] & 0xf;
-        if (disp_buf[i1 + 2] >= '0' && disp_buf[i1 + 2] <= '9') {
-          next_disp = next_disp * 10 + (disp_buf[i1 + 2] & 0xf);
-          if (disp_buf[i1 + 3] >= '0' && disp_buf[i1 + 3] <= '9') {
-            next_disp = next_disp * 10 + (disp_buf[i1 + 3] & 0xf);
-            if (disp_buf[i1 + 4] >= '0' && disp_buf[i1 + 4] <= '9') {
-              next_disp = next_disp * 10 + (disp_buf[i1 + 4] & 0xf);
-            }
-          }
-        }
-        next_disp = next_disp * 10;
         disp_buf[i1] = 0;
         disp(disp_buf);
         break;

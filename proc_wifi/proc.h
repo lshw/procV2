@@ -9,7 +9,7 @@ WiFiClient tcpClients[MAX_SRV_CLIENTS];
 
 void proc_setup() {
   Serial.begin(115200);
-//  digitalWrite(_24V_OUT, eeprom_read(VOUT_SET));
+  //  digitalWrite(_24V_OUT, eeprom_read(VOUT_SET));
   tcpServer.begin();
   tcpServer.setNoDelay(true);
 }
@@ -33,16 +33,17 @@ void proc_loop() {
       // - stop() - automatically too
     }
   }
+#if 0
   //check TCP clients for data
   // Incredibly, this code is faster than the bufferred one below - #4620 is needed
   // loopback/3000000baud average 348KB/s
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     while (tcpClients[i].available() && Serial.availableForWrite() > 0) {
       // working char by char is not very efficient
-      ch=tcpClients[i].read();
+      ch = tcpClients[i].read();
       Serial.write(ch);
-      for(int i1=0;i1<MAX_SRV_CLIENTS; i1++)
-        if(i1 != i && tcpClients[i1]) tcpClients[i1].write(ch);
+      for (int i1 = 0; i1 < MAX_SRV_CLIENTS; i1++)
+        if (i1 != i && tcpClients[i1]) tcpClients[i1].write(ch);
     }
 
   // determine maximum output size "fair TCP use"
@@ -59,7 +60,8 @@ void proc_loop() {
         }
       }
     }
-
+#endif
+  size_t maxToTcp = 100;
   //check UART for data
   size_t len = std::min((size_t)Serial.available(), maxToTcp);
   len = std::min(len, (size_t)STACK_PROTECTOR);
