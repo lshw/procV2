@@ -1,7 +1,9 @@
 #ifndef __AP_WEB_H__
 #define __AP_WEB_H__
 #include <ESP8266WebServer.h>
+#include <ArduinoOTA.h>
 #include <DNSServer.h>
+#include "wifi_client.h"
 extern void disp(char *);
 extern char ram_buf[10];
 extern String hostname;
@@ -11,7 +13,7 @@ float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 DNSServer dnsServer;
-ESP8266WebServer server(80);
+ESP8266WebServer httpd(80);
 const char* www_username = "root";
 const char* www_password = "admin";
 
@@ -19,8 +21,8 @@ uint32_t ap_on_time = 120000;
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
-  if (!server.authenticate(www_username, www_password))
-    return server.requestAuthentication();
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
 
   int n = WiFi.scanNetworks();
   if (n > 0) {
@@ -46,7 +48,7 @@ void handleRoot() {
                 + "电压:<mark>" + String(v) + "</mark>V<br>";
 }
 
-  server.send(200, "text/html", "<html>"
+  httpd.send(200, "text/html", "<html>"
               "<head>"
               "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
               "<script>"
@@ -81,18 +83,18 @@ void handleRoot() {
               "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
               "<hr></body>"
               "</html>");
-  server.client().stop();
+  httpd.client().stop();
   ap_on_time = millis() + 200000;
 }
 void handleNotFound() {
   File fp;
   int ch;
   String message;
-  if (!server.authenticate(www_username, www_password))
-    return server.requestAuthentication();
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
   SPIFFS.begin();
-  if (SPIFFS.exists(server.uri().c_str())) {
-    fp = SPIFFS.open(server.uri().c_str(), "r");
+  if (SPIFFS.exists(httpd.uri().c_str())) {
+    fp = SPIFFS.open(httpd.uri().c_str(), "r");
     if (fp) {
       while (1) {
         ch = fp.read();
@@ -100,17 +102,17 @@ void handleNotFound() {
         message += (char)ch;
       }
       fp.close();
-      server.send ( 200, "text/plain", message );
-      server.client().stop();
+      httpd.send ( 200, "text/plain", message );
+      httpd.client().stop();
       message = "";
       return;
     }
   }
   message = "File Not Found\n\n";
   message += "URI: ";
-  message += server.uri();
-  server.send ( 404, "text/plain", message );
-  server.client().stop();
+  message += httpd.uri();
+  httpd.send ( 404, "text/plain", message );
+  httpd.client().stop();
   message = "";
 }
 void add_ssid_php() {
@@ -118,9 +120,9 @@ void add_ssid_php() {
   String ssid, data;
   char ch;
   SPIFFS.begin();
-  for (uint8_t i = 0; i < server.args(); i++) {
-    if (server.argName(i).compareTo("data") == 0) {
-      data = server.arg(i);
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("data") == 0) {
+      data = httpd.arg(i);
       data.trim();
       data.replace("\xef\xbc\x9a", ":"); //utf8 :
       data.replace("\xa3\xba", ":"); //gbk :
@@ -150,18 +152,18 @@ void add_ssid_php() {
   fp.close();
   SPIFFS.end();
   wifi_connect();
-  server.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
 
 }
 void save_php() {
   File fp;
   String url, data;
-  if (!server.authenticate(www_username, www_password))
-    return server.requestAuthentication();
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
   SPIFFS.begin();
-  for (uint8_t i = 0; i < server.args(); i++) {
-    if (server.argName(i).compareTo("data") == 0) {
-      data = server.arg(i);
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("data") == 0) {
+      data = httpd.arg(i);
       data.trim();
       data.replace("\xef\xbc\x9a", ":"); //utf8 :
       data.replace("\xa3\xba", ":"); //gbk :
@@ -173,8 +175,8 @@ void save_php() {
         fp = SPIFFS.open("/ssid.txt", "r");
         fp.close();
       }
-    } else if (server.argName(i).compareTo("url") == 0) {
-      url = server.arg(i);
+    } else if (httpd.argName(i).compareTo("url") == 0) {
+      url = httpd.arg(i);
       url.trim();
       if (url.length() == 0) {
         SPIFFS.remove("/url.txt");
@@ -183,8 +185,8 @@ void save_php() {
         fp.println(url);
         fp.close();
       }
-    } else if (server.argName(i).compareTo("url1") == 0) {
-      url = server.arg(i);
+    } else if (httpd.argName(i).compareTo("url1") == 0) {
+      url = httpd.arg(i);
       url.trim();
       if (url.length() == 0) {
         SPIFFS.remove("/url1.txt");
@@ -198,7 +200,7 @@ void save_php() {
   url = "";
   SPIFFS.end();
   wifi_connect();
-  server.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
 }
 void AP() {
   // Go into software AP mode.
@@ -214,24 +216,24 @@ void AP() {
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());
   wifi_set_sleep_type(LIGHT_SLEEP_T);
-  http_listen();
+  void httpd_listen();
 }
-void http_listen() {
+void httpd_listen() {
 
-  server.begin();
+  httpd.begin();
 
-  server.on("/", handleRoot);
-  server.on("/save.php", save_php); //保存设置
-  server.on("/add_ssid.php", add_ssid_php); //保存设置
+  httpd.on("/", handleRoot);
+  httpd.on("/save.php", save_php); //保存设置
+  httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 
-  server.on("/update.php", HTTP_POST, []() {
-  if (!server.authenticate(www_username, www_password))
-    return server.requestAuthentication();
+  httpd.on("/update.php", HTTP_POST, []() {
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
     ram_buf[0] = 0;
     send_ram();
-    server.sendHeader("Connection", "close");
+    httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
-      server.send(200, "text/html", "<html>"
+      httpd.send(200, "text/html", "<html>"
                   "<head>"
                   "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                   "</head>"
@@ -241,7 +243,7 @@ void http_listen() {
                   "</html>"
                  );
     } else {
-      server.send(200, "text/html", "<html>"
+      httpd.send(200, "text/html", "<html>"
                   "<head>"
                   "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                   "</head>"
@@ -255,7 +257,7 @@ void http_listen() {
       ESP.restart();
     }
   }, []() {
-    HTTPUpload& upload = server.upload();
+    HTTPUpload& upload = httpd.upload();
     if (upload.status == UPLOAD_FILE_START) {
       WiFiUDP::stopAll();
       uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
@@ -269,17 +271,17 @@ void http_listen() {
       }
     yield();
   });
-  server.onNotFound(handleNotFound);
-  server.begin();
+  httpd.onNotFound(handleNotFound);
+  httpd.begin();
 
 }
-void http_loop() {
-  server.handleClient();
-}
+
+#define httpd_loop() httpd.handleClient()
+
 uint32_t ms0;
 void ap_loop() {
   dnsServer.processNextRequest();
-  http_loop();
+  httpd_loop();
   ArduinoOTA.handle();
   if (ms0 < millis()) {
     get_batt();
@@ -297,7 +299,7 @@ void ap_loop() {
         ram_buf[0] = 0;
         disp("00000");
         ht16c21_cmd(0x84, 0);
-        server.close();
+        httpd.close();
         ESP.restart();
       }
     }

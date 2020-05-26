@@ -38,7 +38,6 @@ void setup()
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
-      ram_buf[7] |= 1; //充电
       ram_buf[0] = 0;//ota以后，
       disp(" OTA ");
       break;
@@ -66,7 +65,6 @@ void setup()
 
 void loop()
 {
-//  proc_loop();
   switch (proc) {
     case OTA_MODE:
       if (WiFiMulti.run() == WL_CONNECTED)
