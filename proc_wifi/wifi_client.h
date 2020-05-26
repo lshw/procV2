@@ -24,13 +24,12 @@ uint8_t hex2ch(char dat) {
   if (dat >= 'a') return dat - 'a' + 10;
   return dat - '0';
 }
-bool wifi_connect() {
+void wifi_setup() {
   File fp;
   uint32_t i;
   char buf[3];
   char ch;
   boolean is_ssid = true;
-  if (wifi_connected) return true;
   if (proc == OTA_MODE) { //ota时要 ap 和 client
     WiFi.mode(WIFI_AP_STA);
     AP();
@@ -78,26 +77,15 @@ bool wifi_connect() {
     fp.close();
     SPIFFS.end();
   }
-  // ... Give ESP 10 seconds to connect to station.
-  if (proc == OTA_MODE) return true;
-  unsigned long startTime = millis();
-  i = 0;
-  while (WiFiMulti.run() != WL_CONNECTED && millis() - startTime < 20000)
-  {
-    delay(1000);
-    system_soft_wdt_feed ();
-    if (i % 2 == 0) {
-    } else
-      i++;
-  }
-  ht16c21_cmd(0x88, 0); //停止闪烁
+}
+bool wifi_connected_is_ok(){
   if (WiFiMulti.run() == WL_CONNECTED)
   {
-    wifi_connected = true;
+    ht16c21_cmd(0x88, 0); //停止闪烁
     return true;
   }
-  else
-    return false;
+  ht16c21_cmd(0x88, 0); //开始闪烁
+  return false;
 }
 
 uint16_t http_get(uint8_t no) {

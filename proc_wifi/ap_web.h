@@ -151,7 +151,7 @@ void add_ssid_php() {
   fp.println(data);
   fp.close();
   SPIFFS.end();
-  wifi_connect();
+  wifi_setup();
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
 
 }
@@ -199,7 +199,7 @@ void save_php() {
   }
   url = "";
   SPIFFS.end();
-  wifi_connect();
+  wifi_setup();
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
 }
 void AP() {
