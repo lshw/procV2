@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.56"
+#define VER "1.57"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -76,6 +76,7 @@ void loop()
       break;
     default:
       if (wifi_connected_is_ok()) {
+        proc_loop();
         if (!httpd_up) {
           httpd_listen();
           httpd_up = true;
