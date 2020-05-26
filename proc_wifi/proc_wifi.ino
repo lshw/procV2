@@ -17,7 +17,6 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 //0,1-正常 2-OTA
 #define OTA_MODE 2
 
-#include "fs.h"
 #include "ota.h"
 #include "wifi_client.h"
 #include "ap_web.h"
