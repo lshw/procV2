@@ -5,7 +5,7 @@
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
-Ticker _myTicker,pcResetTicker,pcPowerTicker;
+Ticker _myTicker,pcResetTicker,pcPowerTicker,ota_test;
 extern char ram_buf[10];
 uint16_t http_get(uint8_t);
 void send_ram();
@@ -45,27 +45,30 @@ void wget() {
     httpCode = http_get((~ram_buf[7] >> 1) & 1); //再试试另一个的url
   }
 }
-
+uint8_t test_t=0;
 void test(){
-  pinMode(_24V_OUT,OUTPUT);
-  pinMode(PC_RESET,OUTPUT);
-  pinMode(PC_POWER,OUTPUT);
-  digitalWrite(_24V_OUT,LOW);
-  digitalWrite(PC_RESET,HIGH);
-  digitalWrite(PC_POWER,LOW);
-analogWriteFreq(400);
-  analogWrite(PWM,512);
-  for(uint8_t i=20;i>0;i--) {
-    delay(500);
-    digitalWrite(_24V_OUT,!digitalRead(_24V_OUT));
-    digitalWrite(PC_RESET,!digitalRead(PC_RESET));
-    digitalWrite(PC_POWER,!digitalRead(PC_POWER));
-    if(i%2) analogWrite(PWM,512+i*10);
-    else analogWrite(PWM,512-i*10);
+  if(test_t>20) return;
+  if(test_t == 20) {
+    test_t++;
+    digitalWrite(PC_POWER,LOW);
+    digitalWrite(_24V_OUT,LOW);
+    digitalWrite(PC_RESET,LOW);
+    return;
   }
-  digitalWrite(_24V_OUT,LOW);
-  digitalWrite(PC_RESET,HIGH);
-  digitalWrite(PC_POWER,HIGH);
+  if(test_t == 0) {
+    analogWriteFreq(400);
+    analogWrite(PWM,512);
+    digitalWrite(PC_POWER,LOW);
+    digitalWrite(_24V_OUT,HIGH);
+    digitalWrite(PC_RESET,LOW);
+  }
+  test_t++;
+  bool s=digitalRead(_24V_OUT);
+  digitalWrite(_24V_OUT,digitalRead(PC_POWER));
+  digitalWrite(PC_POWER,digitalRead(PC_RESET));
+  digitalWrite(PC_RESET,s);
+  if(test_t % 2) analogWrite(PWM,512+(20-test_t)*20);
+  else analogWrite(PWM,512-(20-test_t)*20);
 }
 void poweroff(uint32_t sec) {
   delay(sec*1000);

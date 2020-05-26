@@ -8,12 +8,6 @@ WiFiServer tcpServer(23);
 WiFiClient tcpClients[MAX_SRV_CLIENTS];
 
 void proc_setup() {
-  pinMode(_24V_OUT, OUTPUT);
-  digitalWrite(_24V_OUT, HIGH); //默认24V开启输出
-  pinMode(PC_RESET, OUTPUT);
-  digitalWrite(PC_RESET, LOW);
-  pinMode(PC_POWER, OUTPUT);
-  digitalWrite(PC_POWER, LOW);
   Serial.begin(115200);
 //  digitalWrite(_24V_OUT, eeprom_read(VOUT_SET));
   tcpServer.begin();
