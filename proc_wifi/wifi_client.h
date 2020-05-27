@@ -35,6 +35,7 @@ void wifi_setup() {
   } else  { //测温时， 只用client
     WiFi.mode(WIFI_STA);
   }
+  wifi_set_sleep_type(LIGHT_SLEEP_T);
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {
       fp = SPIFFS.open("/ssid.txt", "w");

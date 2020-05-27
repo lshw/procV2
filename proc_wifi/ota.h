@@ -3,7 +3,7 @@
 #include <WiFiUdp.h>
 #include <DNSServer.h>
 #include <ArduinoOTA.h>
-#include "ap_web.h"
+#include "httpd.h"
 char ip_buf[30];
 uint8_t ip_offset, ip_len;
 extern void disp(char *);
@@ -32,7 +32,6 @@ void ota_setup() {
     disp(disp_buf);
   });
   ArduinoOTA.begin();
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
 void zmd() {
   uint8_t i, i0, i1;

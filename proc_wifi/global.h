@@ -1,5 +1,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
 #include "config.h"
 #include "ht16c21.h"
 #include "Ticker.h"
@@ -15,6 +17,7 @@ float get_batt();
 float v;
 uint8_t hour = 0, minute = 58, sec = 56;
 uint8_t timer3 = 10;
+DNSServer dnsServer;
 void timer1s() {
   char disp_buf[6];
   if (timer3 > 0) {
@@ -161,5 +164,20 @@ String fp_gets(File fp) {
   }
   ret.trim();
   return ret;
+}
+
+void AP() {
+  // Go into software AP mode.
+  struct softap_config cfgESP;
+
+  while (!wifi_softap_get_config(&cfgESP)) {
+    system_soft_wdt_feed();
+  }
+  cfgESP.authmode = AUTH_OPEN;//无密码模式
+  wifi_softap_set_config(&cfgESP);
+  delay(10);
+  WiFi.softAP("proc", "");
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.start(53, "*", WiFi.softAPIP());
 }
 #endif

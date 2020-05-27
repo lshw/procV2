@@ -2,7 +2,6 @@
 #define __AP_WEB_H__
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
 #include "wifi_client.h"
 extern void disp(char *);
 extern char ram_buf[10];
@@ -12,7 +11,6 @@ void send_ram();
 float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
-DNSServer dnsServer;
 ESP8266WebServer httpd(80);
 const char* www_username = "root";
 const char* www_password = "admin";
@@ -200,21 +198,6 @@ void save_php() {
   SPIFFS.end();
   wifi_setup();
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
-}
-void AP() {
-  // Go into software AP mode.
-  struct softap_config cfgESP;
-
-  while (!wifi_softap_get_config(&cfgESP)) {
-    system_soft_wdt_feed();
-  }
-  cfgESP.authmode = AUTH_OPEN;//无密码模式
-  wifi_softap_set_config(&cfgESP);
-  delay(10);
-  WiFi.softAP("proc", "");
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
 void httpd_listen() {
 
