@@ -17,8 +17,10 @@ const char* www_password = "admin";
 
 uint32_t ap_on_time = 120000;
 void handleRoot() {
-  if (!httpd.authenticate(www_username, www_password))
+  String exit_button;
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
+  if(proc != OTA_MODE) exit_button="<a href=http://logout@"+ WiFi.localIP().toString() +"><button>退出</button></a>";
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -32,6 +34,7 @@ void handleRoot() {
              "<a href=/switch.php?b=RESET&t=4000><button>长按复位</button></a>"
              "<a href=/switch.php?b=POWER&t=300><button>短按电源</button></a>"
              "<a href=/switch.php?b=POWER&t=4000><button>长按电源</button></a>"
+             +exit_button+
              "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
             );
   httpd.client().stop();
@@ -39,7 +42,7 @@ void handleRoot() {
 void switch_php() {
   String pin;
   uint16_t t;
-  if (!httpd.authenticate(www_username, www_password))
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("b") == 0) {
@@ -70,7 +73,7 @@ void switch_php() {
 void set_php() {
   String wifi_stat, wifi_scan;
   String ssid;
-  if (!httpd.authenticate(www_username, www_password))
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
 
   int n = WiFi.scanNetworks();
@@ -138,7 +141,7 @@ void handleNotFound() {
   File fp;
   int ch;
   String message;
-  if (!httpd.authenticate(www_username, www_password))
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
   if (SPIFFS.exists(httpd.uri().c_str())) {
@@ -159,6 +162,11 @@ void handleNotFound() {
   message = "File Not Found\n\n";
   message += "URI: ";
   message += httpd.uri();
+  message += "\nMethod: ";
+  message += (httpd.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += httpd.args();
+  message += "\n";
   httpd.send ( 404, "text/plain", message );
   httpd.client().stop();
   message = "";
@@ -207,7 +215,7 @@ void add_ssid_php() {
 void save_php() {
   File fp;
   String url, data;
-  if (!httpd.authenticate(www_username, www_password))
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
@@ -263,7 +271,7 @@ void httpd_listen() {
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 
   httpd.on("/update.php", HTTP_POST, []() {
-    if (!httpd.authenticate(www_username, www_password))
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
     ram_buf[0] = 0;
     send_ram();
