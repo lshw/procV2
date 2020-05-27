@@ -64,6 +64,7 @@ void switch_php() {
     pc24vOutTicker.detach();
     pc24vOutTicker.attach_ms(t, pc24vOn);
   }
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
   httpd.client().stop();
 }
 void set_php() {
@@ -257,6 +258,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/set.php", set_php);
+  httpd.on("/switch.php", switch_php);
   httpd.on("/save.php", save_php); //保存设置
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 
