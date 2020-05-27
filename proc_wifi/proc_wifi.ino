@@ -1,12 +1,12 @@
 #include <FS.h>
-#define VER "1.59"
+#define VER "1.60"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
 }
 #include "config.h"
 #include "global.h"
-
+#include "ntp.h"
 bool lcd_flash = false;
 extern char ip_buf[30];
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
@@ -77,6 +77,7 @@ void loop()
       if (wifi_connected_is_ok()) {
         proc_loop();
         if (!httpd_up) {
+          ntpclient();
           wget();
           httpd_listen();
           httpd_up = true;

@@ -16,11 +16,11 @@ void test();
 uint8_t test_t = 0;
 float get_batt();
 float v;
-uint8_t hour = 0, minute = 58, sec = 56;
+uint8_t year, month = 1, day = 1, hour = 0, minute = 58, sec = 56;
 uint8_t timer3 = 10;
 DNSServer dnsServer;
 void timer1s() {
-  char disp_buf[6];
+  char disp_buf[20];
   if (timer3 > 0) {
     if (timer3 == 1) {
       ram_buf[0] = 0;
@@ -39,8 +39,34 @@ void timer1s() {
       ota_test.attach(0.5, test);
       minute = 0;
       hour++;
-      if (hour >= 24)
+      if (hour >= 24) {
         hour = 0;
+        day++;
+        if (day >= 28) {
+          disp_buf[0] = 31;
+          switch (month) {
+            case 4:
+            case 6:
+            case 9:
+            case 11:
+              disp_buf[0] = 30;
+              break;
+            case 2:
+              if (year % 4 != 0) disp_buf[0] = 28;
+              else if (year % 100 == 0 && year % 400 != 0) disp_buf[0] = 28;
+              else disp_buf[0] = 29;
+              break;
+          }
+          if (day > disp_buf[0]) {
+            month++;
+            day = 1;
+            if (month > 12) {
+              year++;
+              month = 1;
+            }
+          }
+        }
+      }
     }
     sprintf(disp_buf, "%02d-%02d", hour, minute);
     disp(disp_buf);

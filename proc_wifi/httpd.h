@@ -20,7 +20,7 @@ void handleRoot() {
   String exit_button;
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
-  if(proc != OTA_MODE) exit_button="<a href=http://logout@"+ WiFi.localIP().toString() +"><button>退出</button></a>";
+  if (proc != OTA_MODE) exit_button = "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -34,7 +34,7 @@ void handleRoot() {
              "<a href=/switch.php?b=RESET&t=4000><button>长按复位</button></a>"
              "<a href=/switch.php?b=POWER&t=300><button>短按电源</button></a>"
              "<a href=/switch.php?b=POWER&t=4000><button>长按电源</button></a>"
-             +exit_button+
+             + exit_button +
              "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
             );
   httpd.client().stop();
@@ -271,7 +271,7 @@ void httpd_listen() {
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 
   httpd.on("/update.php", HTTP_POST, []() {
-  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
+    if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
     ram_buf[0] = 0;
     send_ram();
@@ -292,7 +292,7 @@ void httpd_listen() {
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                  "</head>"
                  "<body>"
-                 "<script>setTimeout(function(){ alert('升级成功!'); }, 15000); </script>"
+                 "<script>setTimeout(function(){ alert('升级成功!');location.replace('/set.php'); }, 15000); </script>"
                  "</body>"
                  "</html>"
                 );
