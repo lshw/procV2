@@ -61,7 +61,6 @@ void setup()
       break;
   }
   send_ram();
-  wget();
 }
 bool httpd_up = false;
 void loop()
@@ -78,6 +77,7 @@ void loop()
       if (wifi_connected_is_ok()) {
         proc_loop();
         if (!httpd_up) {
+          wget();
           httpd_listen();
           httpd_up = true;
         }
