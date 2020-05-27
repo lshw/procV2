@@ -17,6 +17,56 @@ const char* www_password = "admin";
 
 uint32_t ap_on_time = 120000;
 void handleRoot() {
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
+  httpd.send(200, "text/html", "<html>"
+             "<head>"
+             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             "</head>"
+             "<body>"
+             "SN:<mark>" + hostname + "</mark> &nbsp; "
+             "版本:<mark>" VER "</mark>"
+             "<hr>"
+             "<a href=/set.php><button>网络设置及升级</button></a>"
+             "<a href=/switch.php?b=RESET&t=300><button>短按复位</button></a>"
+             "<a href=/switch.php?b=RESET&t=4000><button>长按复位</button></a>"
+             "<a href=/switch.php?b=POWER&t=300><button>短按电源</button></a>"
+             "<a href=/switch.php?b=POWER&t=4000><button>长按电源</button></a>"
+             "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+            );
+  httpd.client().stop();
+}
+void switch_php() {
+  String pin;
+  uint16_t t;
+  if (!httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("b") == 0) {
+      pin = httpd.arg(i);
+      pin.trim();
+      // if(data=='RESET') pin=PC_RESET;
+      // else if(data=="POWER") pin = PC_POWER;
+    } else if (httpd.argName(i).compareTo("t") == 0) {
+      t = httpd.arg(i).toInt();
+    }
+  }
+  if (pin == "POWER") {
+    digitalWrite(PC_POWER, HIGH);
+    pcPowerTicker.detach();
+    pcPowerTicker.attach_ms(t, pcPowerUp);
+  } else if (pin == "RESET") {
+    digitalWrite(PC_RESET, HIGH);
+    pcResetTicker.detach();
+    pcResetTicker.attach_ms(t, pcResetUp);
+  } else if (pin == "_24V_OUT") {
+    digitalWrite(_24V_OUT, LOW);
+    pc24vOutTicker.detach();
+    pc24vOutTicker.attach_ms(t, pc24vOn);
+  }
+  httpd.client().stop();
+}
+void set_php() {
   String wifi_stat, wifi_scan;
   String ssid;
   if (!httpd.authenticate(www_username, www_password))
@@ -149,7 +199,8 @@ void add_ssid_php() {
   fp.close();
   SPIFFS.end();
   wifi_setup();
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
+  httpd.client().stop();
 
 }
 void save_php() {
@@ -197,13 +248,15 @@ void save_php() {
   url = "";
   SPIFFS.end();
   wifi_setup();
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
+  httpd.client().stop();
 }
 void httpd_listen() {
 
   httpd.begin();
 
   httpd.on("/", handleRoot);
+  httpd.on("/set.php", set_php);
   httpd.on("/save.php", save_php); //保存设置
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
 

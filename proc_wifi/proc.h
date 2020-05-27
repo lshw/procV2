@@ -1,7 +1,7 @@
 #ifndef __PROC_H__
 #define __PROC_H__
 
-#include <algorithm> // std::min
+#include "global.h"
 #define STACK_PROTECTOR  512 // bytes
 #define MAX_SRV_CLIENTS 4
 WiFiServer tcpServer(23);
@@ -19,8 +19,8 @@ void proc_loop() {
     int i;
     for (i = 0; i < MAX_SRV_CLIENTS; i++)
       if (!tcpClients[i]) { // equivalent to !tcpClients[i].connected()
-	tcpClients[i] = tcpServer.available();
-	break;
+        tcpClients[i] = tcpServer.available();
+        break;
       }
     //没有位置， busy ,stop();
     if (i == MAX_SRV_CLIENTS) {
@@ -32,22 +32,21 @@ void proc_loop() {
       sbuf[0] = tcpClients[i].read();
       Serial.write(sbuf[0]);
       for (int i1 = 0; i1 < MAX_SRV_CLIENTS; i1++)
-	if (i1 != i && tcpClients[i1]) tcpClients[i1].write(sbuf[0]);
+        if (i1 != i && tcpClients[i1]) tcpClients[i1].write(sbuf[0]);
     }
-  size_t len=Serial.available();
+  size_t len = Serial.available();
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) {
       size_t afw = tcpClients[i].availableForWrite();
-      if(len > afw ) len = afw;  
+      if (len > afw ) len = afw;
     }
-  if(len > SBUF_SIZE ) len= SBUF_SIZE;
+  if (len > SBUF_SIZE ) len = SBUF_SIZE;
   if (len) {
     size_t serial_got = Serial.readBytes(sbuf, len);
     for (int i = 0; i < MAX_SRV_CLIENTS; i++)
       if (tcpClients[i].availableForWrite() >= serial_got) {
-	size_t tcp_sent = tcpClients[i].write(sbuf, serial_got);
+        size_t tcp_sent = tcpClients[i].write(sbuf, serial_got);
       }
   }
 }
-
 #endif //__PROC_H__

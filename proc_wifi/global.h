@@ -7,7 +7,8 @@
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
-Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
+bool telnet_auth = false;
+Ticker _myTicker, pcResetTicker, pcPowerTicker, pc24vOutTicker, ota_test;
 extern char ram_buf[10];
 uint16_t http_get(uint8_t);
 void send_ram();
@@ -44,14 +45,6 @@ void timer1s() {
     sprintf(disp_buf, "%02d-%02d", hour, minute);
     disp(disp_buf);
   }
-}
-
-void pcPowerUp() {
-  digitalWrite(PC_POWER, LOW);
-}
-
-void pcResetUp() {
-  digitalWrite(PC_RESET, LOW);
 }
 
 void wget() {
@@ -179,5 +172,18 @@ void AP() {
   WiFi.softAP("proc", "");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());
+}
+
+void pcPowerUp() {
+  digitalWrite(PC_POWER, LOW);
+  pcPowerTicker.detach();
+}
+void pcResetUp() {
+  digitalWrite(PC_RESET, LOW);
+  pcResetTicker.detach();
+}
+void pc24vOn() {
+  digitalWrite(_24V_OUT, HIGH);
+  pc24vOutTicker.detach();
 }
 #endif
