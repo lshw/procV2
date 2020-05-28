@@ -12,7 +12,15 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat) {
   Wire.endTransmission();
 }
 void ht16c21_setup() {
+  pinMode(5, OUTPUT);
+  for (uint8_t i = 0; i < 10; i++) {
+    digitalWrite(5, HIGH);
+    delay(1);
+    digitalWrite(5, LOW);
+    delay(1);
+  }
   Wire.begin(4, 5);
+
   if (!load_ram() && !load_ram() && !load_ram()) {
     ram_buf[0] = 0xff; //读取错误
     ram_buf[7] = 0; // 1 充电， 0 不充电
