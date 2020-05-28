@@ -7,18 +7,47 @@
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
 uint16_t timer2 = 0; //秒
+char disp_buf[22];
 bool telnet_auth = false;
+bool run_zmd = true;
 Ticker _myTicker, pcResetTicker, pcPowerTicker, pc24vOutTicker, ota_test;
 extern char ram_buf[10];
+extern char disp_buf[22];
+uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
+//0,1-正常 2-OTA
+#define OTA_MODE 2
+#define ZMD_BUF_SIZE 100
+char zmd_disp[ZMD_BUF_SIZE];
+uint8_t zmd_offset = 0, zmd_size = 0;
 uint16_t http_get(uint8_t);
 void send_ram();
 void test();
+void zmd();
 uint8_t test_t = 0;
 float get_batt();
 float v;
-uint8_t year, month = 1, day = 1, hour = 0, minute = 58, sec = 56;
+uint8_t year, month = 1, day = 1, hour = 0, minute = 0, sec = 0;
 uint8_t timer3 = 10;
 DNSServer dnsServer;
+bool wifi_connected_is_ok();
+void update_disp() {
+  if (wifi_connected_is_ok()) {
+    if (proc == OTA_MODE) {
+      snprintf(zmd_disp, sizeof(zmd_disp), " OTA %s -%s-  ", WiFi.localIP().toString().c_str(), VER);
+    } else {
+      if (year != 0)
+        snprintf(zmd_disp, sizeof(zmd_disp), " 20%02d-%02d-%02d %02d-%02d  %s  ", year, month, day, hour, minute, WiFi.localIP().toString().c_str());
+      else
+        snprintf(zmd_disp, sizeof(zmd_disp), " %s ", WiFi.localIP().toString().c_str());
+    }
+  } else {
+    if (proc == OTA_MODE)
+      snprintf(zmd_disp, sizeof(zmd_disp), " AP -%s- ", VER);
+    else
+      snprintf(zmd_disp, sizeof(zmd_disp), " %3.2f -%s-  ", v, VER);
+  }
+  zmd_offset = 0;
+}
 void timer1s() {
   char disp_buf[20];
   if (timer3 > 0) {
@@ -68,11 +97,11 @@ void timer1s() {
         }
       }
     }
-    sprintf(disp_buf, "%02d-%02d", hour, minute);
-    disp(disp_buf);
+    get_batt();
+    update_disp();
   }
+  run_zmd = true;
 }
-
 void wget() {
   uint16_t httpCode = http_get((ram_buf[7] >> 1) & 1); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
@@ -212,4 +241,36 @@ void pc24vOn() {
   digitalWrite(_24V_OUT, HIGH);
   pc24vOutTicker.detach();
 }
+
+bool no_dot() {//判断显示是否有效,并填充disp_buf
+  uint8_t i = 0, i0 = 0, dots[8];
+  memset(disp_buf, 0, sizeof(disp_buf));
+  //  memset(dots,0,sizeof(dots));
+  while (i < 5) {
+    if (zmd_disp[zmd_offset + i0] == '.') dots[i0] = '.';
+    else {
+      dots[i0] = '0';
+      i++;
+    }
+    disp_buf[i0] = zmd_disp[(zmd_offset + i0) % zmd_size];
+    i0++;
+    if (i0 == zmd_size) return true; //循环了
+  }// disp[]='.123.45.' -> dots[]='.00.0.'
+  if (dots[0] == '.' || dots[1] == '.' || dots[5] == '.' || dots[6] == '.' )
+    return false;
+  else
+    return true;
+}
+
+void zmd() {  //1s 一次Ticker
+  if (!wifi_connected_is_ok()) return;
+  zmd_size = strlen(zmd_disp);
+  if (zmd_size == 0) return;
+  if (zmd_size < zmd_offset) zmd_offset = 0;
+  while (!no_dot())
+    zmd_offset = (zmd_offset + 1) % zmd_size;
+  disp(disp_buf);
+  zmd_offset = (zmd_offset + 1) % zmd_size;
+}
+
 #endif

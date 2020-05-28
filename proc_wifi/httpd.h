@@ -6,7 +6,6 @@
 extern void disp(char *);
 extern char ram_buf[10];
 extern String hostname;
-void set_ram_check();
 void send_ram();
 float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
@@ -130,7 +129,9 @@ void set_php() {
              "<input type=submit name=submit value=save>"
              "</form>"
              "<hr>"
-             "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+             "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
+             "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
+             "<input type='submit' value='上传'></form>"
              "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
              "<hr></body>"
              "</html>");

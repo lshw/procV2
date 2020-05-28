@@ -47,7 +47,8 @@ void ntp_recover() {
   minute = dida2000 % 60;
   hour = dida2000 / 60;
   ntp.stop();
-  ntpTicker.attach(3600*24, ntpclient);
+  update_disp();
+  ntpTicker.attach(3600 * 24, ntpclient);
 }
 void ntpclient() {
   IPAddress timeServerIP; // time.nist.gov NTP server address

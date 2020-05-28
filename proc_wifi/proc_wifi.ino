@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.60"
+#define VER "1.61"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -7,15 +7,7 @@ extern "C" {
 #include "config.h"
 #include "global.h"
 #include "ntp.h"
-bool lcd_flash = false;
-extern char ip_buf[30];
-void ht16c21_cmd(uint8_t cmd, uint8_t dat);
-char disp_buf[22];
 String hostname = HOSTNAME;
-void httpd_listen();
-uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
-//0,1-正常 2-OTA
-#define OTA_MODE 2
 
 #include "ota.h"
 #include "wifi_client.h"
@@ -24,8 +16,6 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 #include "proc.h"
 void setup()
 {
-  uint8_t i;
-  ip_buf[0] = 0;
   pinMode(_24V_OUT, OUTPUT);
   digitalWrite(_24V_OUT, HIGH); //默认24V开启输出
   pinMode(PC_RESET, OUTPUT);
@@ -46,12 +36,10 @@ void setup()
     case OTA_MODE:
       wdt_disable();
       ram_buf[0] = 0;//ota以后，
-      send_ram();
       disp(" OTA ");
       ota_test.attach(0.5, test);
       ota_setup();
       httpd_listen();
-      return;
       break;
     default:
       proc_setup();
@@ -61,6 +49,9 @@ void setup()
       break;
   }
   send_ram();
+  update_disp();
+  zmd();
+  delay(1000);
 }
 bool httpd_up = false;
 void loop()
@@ -68,21 +59,34 @@ void loop()
   switch (proc) {
     case OTA_MODE:
       httpd_loop();
-      if (wifi_connected_is_ok())
+      if (wifi_connected_is_ok()) {
+        if (!httpd_up) {
+          ntpclient();
+          wget();
+          update_disp();
+          zmd();
+          httpd_up = true;
+        }
         ota_loop();
-      else
+      } else
         ap_loop();
       break;
     default:
       if (wifi_connected_is_ok()) {
         proc_loop();
         if (!httpd_up) {
+          update_disp();
           ntpclient();
           wget();
-          httpd_listen();
           httpd_up = true;
+          httpd_listen();
         }
         httpd_loop();
       }
   }
+  if (run_zmd) {
+    run_zmd = false;
+    zmd();
+  }
+  system_soft_wdt_feed ();
 }
