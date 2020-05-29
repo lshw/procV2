@@ -1,5 +1,5 @@
 #include <FS.h>
-#define VER "1.61"
+#define VER "1.62"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -56,6 +56,7 @@ void setup()
     update_timeok = -1; //如果是0,关闭自动更新
   else
     update_timeok = 0; //开机运行一次
+  get_http_auth();
   delay(1000);
 }
 

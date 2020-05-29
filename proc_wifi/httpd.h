@@ -3,6 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
 #include "wifi_client.h"
+#include "global.h"
 extern void disp(char *);
 extern char ram_buf[10];
 extern String hostname;
@@ -11,8 +12,6 @@ float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 ESP8266WebServer httpd(80);
-const char* www_username = "root";
-const char* www_password = "admin";
 
 uint32_t ap_on_time = 120000;
 void handleRoot() {
@@ -72,9 +71,16 @@ void switch_php() {
 void set_php() {
   String wifi_stat, wifi_scan;
   String ssid;
+  String update_auth;
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
-
+  if (proc == OTA_MODE) {
+    update_auth = "登陆名:<input type=text value="
+                  + String((char *)www_username) +
+                  " name=username maxsize=100>&nbsp;密码:<input type=text value="
+                  + String((char *) www_password) +
+                  " name=password maxsize=100><br>";
+  }
   int n = WiFi.scanNetworks();
   if (n > 0) {
     wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
@@ -127,6 +133,7 @@ void set_php() {
              "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
              "间隔时间:<input maxlength=100  size=10 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
+             + update_auth +
              "<input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
@@ -263,6 +270,18 @@ void save_php() {
       }
       fp = SPIFFS.open("/update_time.txt", "w");
       fp.print(update_time);
+      fp.close();
+    } else if (httpd.argName(i).compareTo("username") == 0) {
+      strncpy(www_username, httpd.arg(i).c_str(), sizeof(www_username));
+      fp = SPIFFS.open("/http_auth.txt", "w");
+      fp.println((char *)www_username);
+      fp.print((char *)www_password);
+      fp.close();
+    } else if (httpd.argName(i).compareTo("password") == 0) {
+      strncpy(www_password, httpd.arg(i).c_str(), sizeof(www_password));
+      fp = SPIFFS.open("/http_auth.txt", "w");
+      fp.println((char *)www_username);
+      fp.print((char *)www_password);
       fp.close();
     }
   }

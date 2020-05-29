@@ -12,6 +12,8 @@ bool telnet_auth = false;
 bool run_zmd = true;
 uint8_t update_time;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
+char www_username[100] = "root";
+char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, pc24vOutTicker, ota_test;
 extern char ram_buf[10];
 extern char disp_buf[22];
@@ -203,6 +205,7 @@ uint8_t get_update_time() {
   }
   return ret;
 }
+
 String fp_gets(File fp) {
   int ch = 0;
   String ret = "";
@@ -219,6 +222,19 @@ String fp_gets(File fp) {
   return ret;
 }
 
+void get_http_auth() {
+  File fp;
+  if (!SPIFFS.begin()) return;
+  fp = SPIFFS.open("/http_auth.txt", "r");
+  if (fp) {
+    memset(www_username, 0, sizeof(www_username));
+    memset(www_password, 0, sizeof(www_password));
+    strncpy(www_username, fp_gets(fp).c_str(), sizeof(www_username));
+    strncpy(www_password, fp_gets(fp).c_str(), sizeof(www_username));
+    fp.close();
+  }
+  return;
+}
 void AP() {
   // Go into software AP mode.
   struct softap_config cfgESP;
