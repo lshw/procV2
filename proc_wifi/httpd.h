@@ -126,7 +126,8 @@ void set_php() {
              "可以设置自己的升级服务器地址(清空恢复)<br>"
              "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-             "<input type=submit name=submit value=save>"
+             "间隔时间:<input maxlength=100  size=10 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
+             "<input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
@@ -253,6 +254,16 @@ void save_php() {
         fp.println(url);
         fp.close();
       }
+    } else if (httpd.argName(i).compareTo("update_time") == 0) {
+      update_time = httpd.arg(i).toInt();
+      if (update_time == 0) {
+        update_timeok = -1;
+      } else {
+        update_timeok = update_time * 60;
+      }
+      fp = SPIFFS.open("/update_time.txt", "w");
+      fp.print(update_time);
+      fp.close();
     }
   }
   url = "";

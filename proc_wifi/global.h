@@ -10,6 +10,8 @@ uint16_t timer2 = 0; //秒
 char disp_buf[22];
 bool telnet_auth = false;
 bool run_zmd = true;
+uint8_t update_time;
+int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 Ticker _myTicker, pcResetTicker, pcPowerTicker, pc24vOutTicker, ota_test;
 extern char ram_buf[10];
 extern char disp_buf[22];
@@ -58,11 +60,12 @@ void timer1s() {
     timer3--;
   }
   if (timer1 > 0) timer1--;//定时器1 测温
-  if (timer2 > 0) timer2--;//定时器2 链接远程服务器
+  if (timer2 > 0) timer2--;//定时器2
   sec++;
   if (sec >= 60) {
     sec = 0;
     minute++;
+    if (update_timeok > 0) update_timeok--;//定时器2 链接远程服务器
     if (minute >= 60) {
       test_t = 0;
       ota_test.attach(0.5, test);
@@ -165,39 +168,41 @@ String get_url(uint8_t no) {
   String ret;
   if (no == 0 || no == '0') ret = String(DEFAULT_URL0);
   else ret = String(DEFAULT_URL1);
-  if (SPIFFS.begin()) {
-    if (no == 0 || no == '0')
-      fp = SPIFFS.open("/url.txt", "r");
-    else
-      fp = SPIFFS.open("/url1.txt", "r");
-    if (fp) {
-      ret = fp.readStringUntil('\n');
-      ret.trim();
-      fp.close();
-    }
+  if (!SPIFFS.begin()) return ret;
+  if (no == 0 || no == '0')
+    fp = SPIFFS.open("/url.txt", "r");
+  else
+    fp = SPIFFS.open("/url1.txt", "r");
+  if (fp) {
+    ret = fp.readStringUntil('\n');
+    ret.trim();
+    fp.close();
   }
-  SPIFFS.end();
   return ret;
 }
 String get_ssid() {
   File fp;
-  String ssid;
-  if (SPIFFS.begin()) {
-    fp = SPIFFS.open("/ssid.txt", "r");
-    if (fp) {
-      ssid = fp.readString();
-      fp.close();
-    } else {
-      fp = SPIFFS.open("/ssid.txt", "w");
-      ssid = "test:cfido.com";
-      fp.println(ssid);
-      fp.close();
-    }
+  String ssid = "test:cfido.com";
+  if (!SPIFFS.begin()) return ssid;
+  fp = SPIFFS.open("/ssid.txt", "r");
+  if (fp) {
+    ssid = fp.readString();
+    fp.close();
   }
-  SPIFFS.end();
   return ssid;
 }
 
+uint8_t get_update_time() {
+  File fp;
+  uint8_t ret = 12;
+  if (!SPIFFS.begin()) return ret;
+  fp = SPIFFS.open("/update_time.txt", "r");
+  if (fp) {
+    ret = fp.readString().toInt();
+    fp.close();
+  }
+  return ret;
+}
 String fp_gets(File fp) {
   int ch = 0;
   String ret = "";

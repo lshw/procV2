@@ -51,8 +51,14 @@ void setup()
   send_ram();
   update_disp();
   zmd();
+  update_time = get_update_time();//检查升级的间隔小时
+  if (update_time == 0)
+    update_timeok = -1; //如果是0,关闭自动更新
+  else
+    update_timeok = 0; //开机运行一次
   delay(1000);
 }
+
 bool httpd_up = false;
 void loop()
 {
@@ -84,9 +90,17 @@ void loop()
         httpd_loop();
       }
   }
+  yield();//先看看其它任务， 有啥需要忙的
   if (run_zmd) {
     run_zmd = false;
     zmd();
+  }
+  if (update_timeok == 0) {
+    if (update_time > 0)
+      update_timeok = update_time * 60;
+    else
+      update_timeok = -1; //停止;
+    wget();
   }
   system_soft_wdt_feed ();
 }
