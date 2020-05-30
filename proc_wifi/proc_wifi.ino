@@ -1,5 +1,4 @@
 #include <FS.h>
-#define VER "1.62"
 #define HOSTNAME "proc_"
 extern "C" {
 #include "user_interface.h"
@@ -26,18 +25,18 @@ void setup()
   Serial.begin(115200);
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
-  wifi_setup();
   ht16c21_setup();
   ht16c21_cmd(0x88, 1); //闪烁
   get_batt();
   proc = ram_buf[0];
+  wifi_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
       ram_buf[0] = 0;//ota以后，
       disp(" OTA ");
-      ota_test.attach(0.5, test);
+//      ota_test.attach(0.5, test);
       ota_setup();
       httpd_listen();
       break;
@@ -101,7 +100,9 @@ void loop()
       update_timeok = update_time * 60;
     else
       update_timeok = -1; //停止;
+    yield();
     wget();
+    yield();
   }
-  system_soft_wdt_feed ();
+  system_soft_wdt_feed();
 }

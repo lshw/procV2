@@ -6,7 +6,8 @@
 #define MAX_SRV_CLIENTS 4
 WiFiServer tcpServer(23);
 WiFiClient tcpClients[MAX_SRV_CLIENTS];
-
+uint8_t client_enable[MAX_SRV_CLIENTS];
+uint16_t client_read[MAX_SRV_CLIENTS];
 void proc_setup() {
   tcpServer.begin();
   tcpServer.setNoDelay(true);
@@ -20,20 +21,39 @@ void proc_loop() {
     for (i = 0; i < MAX_SRV_CLIENTS; i++)
       if (!tcpClients[i]) { // equivalent to !tcpClients[i].connected()
         tcpClients[i] = tcpServer.available();
+        client_read[i] = 0;
+        if (proc == OTA_MODE)
+          client_enable[i] = 1;
+        else {
+          client_enable[i] = 0; //等待web认证
+          tcpClients[i].println("to web, enable this link.#" + String(i + 1));
+        }
         break;
       }
+
     //没有位置， busy ,stop();
     if (i == MAX_SRV_CLIENTS) {
       tcpServer.available().println("busy");
     }
   }
-  for (int i = 0; i < MAX_SRV_CLIENTS; i++)
-    while (tcpClients[i].available() && Serial.availableForWrite() > 0) {
-      sbuf[0] = tcpClients[i].read();
-      Serial.write(sbuf[0]);
-      for (int i1 = 0; i1 < MAX_SRV_CLIENTS; i1++)
-        if (i1 != i && tcpClients[i1]) tcpClients[i1].write(sbuf[0]);
+  yield();
+  for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
+    if (client_enable[i] && tcpClients[i].available()) {
+      if (client_enable[i] == 2) {
+        tcpClients[i].println("ok! enabled.");
+        client_enable[i] = 1;
+      }
+      while (tcpClients[i].available() && Serial.availableForWrite() > 0) {
+        sbuf[0] = tcpClients[i].read();
+        Serial.write(sbuf[0]);
+        for (int i1 = 0; i1 < MAX_SRV_CLIENTS; i1++)
+          if (i1 != i && tcpClients[i1]) tcpClients[i1].write(sbuf[0]);
+        client_read[i]++;
+      }
     }
+  }
+
+  yield();
   size_t len = Serial.available();
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) {

@@ -4,6 +4,7 @@
 #include <ArduinoOTA.h>
 #include "wifi_client.h"
 #include "global.h"
+#include "proc.h"
 extern void disp(char *);
 extern char ram_buf[10];
 extern String hostname;
@@ -12,16 +13,41 @@ float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 ESP8266WebServer httpd(80);
-
+String js_lib = "<script>"
+                "function ajax_get(url) {"
+                " xhr = new XMLHttpRequest();"
+                " xhr.open('GET', url, true);"
+                " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
+                " xhr.send();"
+                "}"
+                "function goto_if(url,msg) {"
+                "if(prompt(msg))"
+                " location.replace(url);"
+                "}"
+                "function ajax_if(url,msg) {"
+                "if(prompt(msg))"
+                " ajax_get(url);"
+                "}"
+                "</script>";
 uint32_t ap_on_time = 120000;
 void handleRoot() {
   String exit_button;
+  String telnets;
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   if (proc != OTA_MODE) exit_button = "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
+  for (uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
+    if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
+      telnets += "<tr><td><input type=checkbox";
+      if (client_enable[i]) telnets += " checked";
+      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String(client_read[i]) + "</td></tr>";
+    }
+  if (telnets != "") telnets = "<hr><table border=1><tr><td>允许</td><td>IP:PORT</td><td>收到字节</td></tr>" + telnets + "</table>";
+
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             + js_lib +
              "</head>"
              "<body>"
              "SN:<mark>" + hostname + "</mark> &nbsp; "
@@ -32,9 +58,30 @@ void handleRoot() {
              "<a href=/switch.php?b=RESET&t=4000><button>长按复位</button></a>"
              "<a href=/switch.php?b=POWER&t=300><button>短按电源</button></a>"
              "<a href=/switch.php?b=POWER&t=4000><button>长按电源</button></a>"
-             + exit_button +
+             + exit_button + telnets +
              "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
             );
+  httpd.client().stop();
+}
+void telnet_client_php() {
+  int8_t id = -1, checked = -1;
+  if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
+    return httpd.requestAuthentication();
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("id") == 0) {
+      id = httpd.arg(i).toInt();
+    } else if (httpd.argName(i).compareTo("checked") == 0) {
+      if (httpd.arg(i) == "true")
+        checked = 2; //2 是要等proc进程给远端发信息
+      else if (httpd.arg(i) == "false")
+        checked = 0;
+    }
+    if (checked != -1 && id != -1) {
+      client_enable[id] = checked;
+      break;
+    }
+  }
+  httpd.send(200, "text/html", "");
   httpd.client().stop();
 }
 void switch_php() {
@@ -107,6 +154,7 @@ void set_php() {
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             + js_lib +
              "<script>"
              "function get_passwd(ssid) {"
              "var passwd=prompt('输入 '+ssid+' 的密码:');"
@@ -217,7 +265,11 @@ void add_ssid_php() {
   fp.close();
   SPIFFS.end();
   wifi_setup();
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body>"
+             "<script>"
+             "location.replace('/set.php');"
+             "</script>"
+             "</body></html>");
   httpd.client().stop();
 
 }
@@ -297,6 +349,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/set.php", set_php);
+  httpd.on("/telnet_client.php", telnet_client_php);
   httpd.on("/switch.php", switch_php);
   httpd.on("/save.php", save_php); //保存设置
   httpd.on("/add_ssid.php", add_ssid_php); //保存设置
