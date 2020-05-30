@@ -14,7 +14,18 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 ESP8266WebServer httpd(80);
 String head, footer;
+String mylink;
 void update_head_footer() {
+  File fp;
+  if (SPIFFS.begin()) {
+    fp = SPIFFS.open("/mylink.txt", "r");
+    if (fp) {
+      mylink = fp.readString();
+      fp.close();
+    }
+  }
+  if (mylink == "") mylink = "在线文档:\r<a href=https://www.bjlx.org.cn/mode/929>https://www.bjlx.org.cn/node/929</a>";
+
   head =
     "<html>"
     "<head>"
@@ -51,8 +62,8 @@ void update_head_footer() {
     "<button onclick=ajax_if('/switch.php?b=POWER&t=4000','按下电源键?')>长按电源</button>";
   footer =
     "<hr><table width=100%><tr>"
-    "<td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a>"
-    "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
+    "<td align=left>" + mylink + "</td>"
+    "<td><td align=right>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
@@ -135,13 +146,13 @@ void set_php() {
   if (proc == OTA_MODE) {
     update_auth = "登陆名:<input type=text value="
                   + String((char *)www_username) +
-                  " name=username maxsize=100>&nbsp;密码:<input type=text value="
+                  " name=username size=10 maxsize=100>&nbsp;密码:<input type=text value="
                   + String((char *) www_password) +
-                  " name=password maxsize=100><br>";
+                  " name=password size=10 maxsize=100><br>";
   }
   int n = WiFi.scanNetworks();
   if (n > 0) {
-    wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
+    wifi_scan = "自动扫描到如下WiFi热点,点击添加:<br>";
     for (int i = 0; i < n; ++i) {
       ssid = String(WiFi.SSID(i));
       if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
@@ -171,14 +182,15 @@ void set_php() {
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
-             "输入ssid:passwd(可以多行多个)"
-             "<input type=submit value=save><br>"
+             "输入ssid:passwd(可以多行多个)<br>"
              "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-             "可以设置自己的升级服务器地址(清空恢复)<br>"
+             "可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
              "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
              "间隔时间:<input maxlength=100  size=10 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
              + update_auth +
+             "自定义链接(html格式,清空恢复原始设置):<br>"
+             "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
@@ -315,6 +327,14 @@ void save_php() {
       fp = SPIFFS.open("/update_time.txt", "w");
       fp.print(update_time);
       fp.close();
+    } else if (httpd.argName(i).compareTo("mylink") == 0) {
+      if (mylink != httpd.arg(i)) {
+        mylink = httpd.arg(i);
+        fp = SPIFFS.open("/mylink.txt", "w");
+        fp.println(mylink);
+        fp.close();
+        update_head_footer();
+      }
     } else if (httpd.argName(i).compareTo("username") == 0) {
       strncpy(www_username, httpd.arg(i).c_str(), sizeof(www_username));
       fp = SPIFFS.open("/http_auth.txt", "w");
