@@ -69,6 +69,7 @@ uint32_t ap_on_time = 120000;
 void handleRoot() {
   String exit_button;
   String telnets;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   if (proc != OTA_MODE) exit_button = "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
@@ -89,6 +90,7 @@ void handleRoot() {
 }
 void telnet_client_php() {
   int8_t id = -1, checked = -1;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   for (uint8_t i = 0; i < httpd.args(); i++) {
@@ -111,6 +113,7 @@ void telnet_client_php() {
 void switch_php() {
   String pin;
   uint16_t t;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   for (uint8_t i = 0; i < httpd.args(); i++) {
@@ -141,6 +144,7 @@ void set_php() {
   String wifi_stat, wifi_scan;
   String ssid;
   String update_auth;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   if (proc == OTA_MODE) {
@@ -206,6 +210,7 @@ void handleNotFound() {
   File fp;
   int ch;
   String message;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
@@ -236,6 +241,7 @@ void add_ssid_php() {
   File fp;
   String ssid, data;
   char ch;
+  yield();
   SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("data") == 0) {
@@ -275,11 +281,11 @@ void add_ssid_php() {
              "</script>"
              "</body></html>");
   httpd.client().stop();
-
 }
 void save_php() {
   File fp;
   String url, data;
+  yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
@@ -356,6 +362,7 @@ void save_php() {
   httpd.client().stop();
 }
 void httpd_listen() {
+  yield();
   update_head_footer();
   httpd.begin();
 
@@ -407,9 +414,9 @@ void httpd_listen() {
       disp(disp_buf);
       Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
+      yield();
       Update.end(true);
     }
-    yield();
   });
   httpd.onNotFound(handleNotFound);
   httpd.begin();
@@ -433,6 +440,7 @@ void ap_loop() {
     ms0 = millis() + 1000;
     disp(disp_buf);
 
+    yield();
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
       else {
