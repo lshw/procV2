@@ -56,7 +56,10 @@ void setup()
   else
     update_timeok = 0; //开机运行一次
   get_http_auth();
-  delay(1000);
+  for(uint8_t i=0;i<10;i++) {
+    delay(200);
+    yield();
+  }
 }
 
 bool httpd_up = false;

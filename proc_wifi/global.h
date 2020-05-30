@@ -51,7 +51,6 @@ void update_disp() {
     else
       snprintf(zmd_disp, sizeof(zmd_disp), " %3.2f -%s-  ", v, VER);
   }
-  zmd_offset = 0;
 }
 void timer1s() {
   char disp_buf[20];
