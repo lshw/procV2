@@ -13,22 +13,47 @@ float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 ESP8266WebServer httpd(80);
-String js_lib = "<script>"
-                "function ajax_get(url) {"
-                " xhr = new XMLHttpRequest();"
-                " xhr.open('GET', url, true);"
-                " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
-                " xhr.send();"
-                "}"
-                "function goto_if(url,msg) {"
-                "if(prompt(msg))"
-                " location.replace(url);"
-                "}"
-                "function ajax_if(url,msg) {"
-                "if(prompt(msg))"
-                " ajax_get(url);"
-                "}"
-                "</script>";
+String head, footer;
+void update_head_footer() {
+  head =
+    "<html>"
+    "<head>"
+    "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+    "<script>"
+    "function ajax_get(url) {"
+    " xhr = new XMLHttpRequest();"
+    " xhr.open('GET', url, true);"
+    " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
+    " xhr.send();"
+    "}"
+    "function goto_if(url,msg) {"
+    "if(confirm(msg))"
+    " location.replace(url);"
+    "}"
+    "function ajax_if(url,msg) {"
+    "if(confirm(msg))"
+    " ajax_get(url);"
+    "}"
+    "function modi(url,text,defaultext) {"
+    " var data=prompt(text,defaultext);"
+    "if( data != defaultext)"
+    "location.replace(url+data);"
+    "return false;"
+    "}"
+    "</script>"
+    "</head>"
+    "<body>"
+    "SN:<mark>" + hostname + "</mark> &nbsp; "
+    "版本:<mark>" VER "</mark><br>"
+    "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
+    "<button onclick=ajax_if('/switch.php?b=RESET&t=4000','复位电脑?')>长按复位</button>"
+    "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
+    "<button onclick=ajax_if('/switch.php?b=POWER&t=4000','按下电源键?')>长按电源</button>";
+  footer =
+    "<hr><table width=100%><tr>"
+    "<td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a>"
+    "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
+}
 uint32_t ap_on_time = 120000;
 void handleRoot() {
   String exit_button;
@@ -44,22 +69,10 @@ void handleRoot() {
     }
   if (telnets != "") telnets = "<hr><table border=1><tr><td>允许</td><td>IP:PORT</td><td>收到字节</td></tr>" + telnets + "</table>";
 
-  httpd.send(200, "text/html", "<html>"
-             "<head>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             + js_lib +
-             "</head>"
-             "<body>"
-             "SN:<mark>" + hostname + "</mark> &nbsp; "
-             "版本:<mark>" VER "</mark>"
-             "<hr>"
+  httpd.send(200, "text/html",
+             head +
              "<a href=/set.php><button>网络设置及升级</button></a>"
-             "<a href=/switch.php?b=RESET&t=300><button>短按复位</button></a>"
-             "<a href=/switch.php?b=RESET&t=4000><button>长按复位</button></a>"
-             "<a href=/switch.php?b=POWER&t=300><button>短按电源</button></a>"
-             "<a href=/switch.php?b=POWER&t=4000><button>长按电源</button></a>"
-             + exit_button + telnets +
-             "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+             + exit_button + telnets + footer
             );
   httpd.client().stop();
 }
@@ -93,8 +106,6 @@ void switch_php() {
     if (httpd.argName(i).compareTo("b") == 0) {
       pin = httpd.arg(i);
       pin.trim();
-      // if(data=='RESET') pin=PC_RESET;
-      // else if(data=="POWER") pin = PC_POWER;
     } else if (httpd.argName(i).compareTo("t") == 0) {
       t = httpd.arg(i).toInt();
     }
@@ -112,7 +123,7 @@ void switch_php() {
     pc24vOutTicker.detach();
     pc24vOutTicker.attach_ms(t, pc24vOn);
   }
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd.send(200, "text/html", pin + " " + String(t) + "ms");
   httpd.client().stop();
 }
 void set_php() {
@@ -134,9 +145,11 @@ void set_php() {
     for (int i = 0; i < n; ++i) {
       ssid = String(WiFi.SSID(i));
       if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-        wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
+        wifi_scan += "&nbsp;<button onclick=modi('/add_ssid.php?data="
+                     + ssid +
+                     ":','输入无线密码','')>*";
       else
-        wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
+        wifi_scan += "&nbsp;<button onclick=gotoif('/add_ssid.php?data=" + ssid + "')>";
       wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
       wifi_scan += "</button>";
       delay(10);
@@ -151,26 +164,10 @@ void set_php() {
                 + "电压:<mark>" + String(v) + "</mark>V<br>";
   }
 
-  httpd.send(200, "text/html", "<html>"
-             "<head>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             + js_lib +
-             "<script>"
-             "function get_passwd(ssid) {"
-             "var passwd=prompt('输入 '+ssid+' 的密码:');"
-             "if(passwd==null) return false;"
-             "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
-             "else return false;"
-             "return true;"
-             "}"
-             "function select_ssid(ssid){"
-             "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
-             "}"
-             "</script>"
-             "</head>"
-             "<body>"
-             "SN:<mark>" + hostname + "</mark> &nbsp; "
-             "版本:<mark>" VER "</mark>"
+  httpd.send(200,
+             "text/html",
+             head +
+             "<a href=/><button>返回首页</button></a>"
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
@@ -188,9 +185,8 @@ void set_php() {
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
              "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
              "<input type='submit' value='上传'></form>"
-             "<hr><table width=100%><tr><td align=left width=50%>在线文档:<a href='https://www.bjlx.org.cn/node/929'>https://www.bjlx.org.cn/node/929</a><td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-             "<hr></body>"
-             "</html>");
+             + footer
+            );
   httpd.client().stop();
   ap_on_time = millis() + 200000;
 }
@@ -217,13 +213,9 @@ void handleNotFound() {
     }
   }
   message = "File Not Found\n\n";
-  message += "URI: ";
-  message += httpd.uri();
-  message += "\nMethod: ";
-  message += (httpd.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += httpd.args();
-  message += "\n";
+  "URI: " + httpd.uri() +
+  "\nArguments: " + httpd.args() + "\n";
+
   httpd.send ( 404, "text/plain", message );
   httpd.client().stop();
   message = "";
@@ -344,7 +336,7 @@ void save_php() {
   httpd.client().stop();
 }
 void httpd_listen() {
-
+  update_head_footer();
   httpd.begin();
 
   httpd.on("/", handleRoot);

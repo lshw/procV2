@@ -36,7 +36,7 @@ void setup()
       wdt_disable();
       ram_buf[0] = 0;//ota以后，
       disp(" OTA ");
-//      ota_test.attach(0.5, test);
+      //      ota_test.attach(0.5, test);
       ota_setup();
       httpd_listen();
       break;
@@ -56,7 +56,7 @@ void setup()
   else
     update_timeok = 0; //开机运行一次
   get_http_auth();
-  for(uint8_t i=0;i<10;i++) {
+  for (uint8_t i = 0; i < 10; i++) {
     delay(200);
     yield();
   }
