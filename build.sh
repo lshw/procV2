@@ -1,5 +1,5 @@
 #!/bin/bash
-cd `dirname $0`/../lib
+cd `dirname $0`/lib
 if ! [ -x ./uncrc32 ] ; then
 gcc -o uncrc32 uncrc32.c
 fi
@@ -52,10 +52,9 @@ $arduino/arduino-builder \
 -prefs=build.warn_data_percentage=75 \
 -verbose \
 ./proc_wifi/proc_wifi.ino \
-|tee /tmp/info_proc_wifi.log
-
-if [ $? == 0 ] ; then
-/opt/arduino-1.8.12/hardware/esp8266com/esp8266/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-size /tmp/build_proc_wifi/proc_wifi.ino.elf |head -n 5
+> /tmp/info_proc_wifi.log
+if [ $? = 0 ] ; then
+#/opt/arduino-1.8.12/hardware/esp8266com/esp8266/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-size /tmp/build_proc_wifi/proc_wifi.ino.elf |head -n 5
  grep "Global vari" /tmp/info_proc_wifi.log |awk -F[ '{printf $2}'|tr -d ']'|awk -F' ' '{print "内存：使用"$1"字节,"$3"%,剩余:"$4"字节"}'
  grep "Sketch uses" /tmp/info_proc_wifi.log |awk -F[ '{printf $2}'|tr -d ']'|awk -F' ' '{print "ROM：使用"$1"字节,"$3"%"}'
 
