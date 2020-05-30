@@ -11,12 +11,16 @@ uint8_t ntp_count = 0;
 void ntp_recover() {
   int cb = ntp.parsePacket();
   if (!cb) {
-    if (ntp_count > 3) {
+    if (ntp_count > 20) {
       ntp.stop();
-      ntpTicker.attach(601, ntpclient);
+
       ntp_count = 0;
       ntpServerName[0]++;
-      if (ntpServerName[0] > '9') ntpServerName[0] = '0';
+      if (ntpServerName[0] == '2') //0.1.2.3有效，10小时后再试
+        ntpTicker.attach(36000, ntpclient);
+      else
+        ntpTicker.attach(20, ntpclient);
+      if (ntpServerName[0] > '3') ntpServerName[0] = '0';
       return;
     }
     ntp_count++;
