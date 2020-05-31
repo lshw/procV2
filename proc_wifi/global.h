@@ -23,12 +23,18 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 //0,1-正常 2-OTA
 #define OTA_MODE 2
 uint8_t _24v_out;
+String ntpServerName[5] = {
+  "",
+  "3.debian.pool.ntp.org",
+  "1.openwrt.pool.ntp.org"
+  "1.debian.pool.ntp.org",
+  "2.debian.pool.ntp.org",
+};
 bool is_dhcp = true;
 IPAddress local_ip = {192, 168, 1, 2};
 IPAddress netmask = {255, 255, 255, 0};
 IPAddress gateway = {192, 168, 1, 1};
 IPAddress dns = {8, 8, 8, 8};
-String ntp_server;
 uint32_t rate = 115200; //串口速率
 uint8_t comset;
 String comset_str[] = {
@@ -321,6 +327,7 @@ void get_network() {
     netmask.fromString(fp_gets(fp));
     gateway.fromString(fp_gets(fp));
     dns.fromString(fp_gets(fp));
+    ntpServerName[0] = fp_gets(fp);
     fp.close();
   }
 }
@@ -427,7 +434,7 @@ void set_save() {
     fp.println(netmask);
     fp.println(gateway);
     fp.println(dns);
-    fp.println(ntp_server);
+    fp.println(ntpServerName[0]);
     fp.close();
     if (!is_dhcp)
       WiFi.config(local_ip, dns, gateway, netmask);

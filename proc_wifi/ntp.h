@@ -6,21 +6,20 @@ Ticker ntpTicker;
 const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
 byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
 void ntpclient();
-char* ntpServerName = "2.debian.pool.ntp.org";
-uint8_t ntp_count = 0;
+uint8_t ntp_count = 0, now_ntp = 0;
 void ntp_recover() {
   int cb = ntp.parsePacket();
   if (!cb) {
     if (ntp_count > 20) {
       ntp.stop();
-
       ntp_count = 0;
-      ntpServerName[0]++;
-      if (ntpServerName[0] == '2') //0.1.2.3有效，10小时后再试
+      now_ntp ++;
+      if (now_ntp == 5) { //0.1.2.3有效，10小时后再试
         ntpTicker.attach(36000, ntpclient);
-      else
+        now_ntp = 0;
+        if (ntpServerName[0] == "") now_ntp = 1;
+      } else
         ntpTicker.attach(20, ntpclient);
-      if (ntpServerName[0] > '3') ntpServerName[0] = '0';
       return;
     }
     ntp_count++;
@@ -57,7 +56,10 @@ void ntp_recover() {
 void ntpclient() {
   IPAddress timeServerIP; // time.nist.gov NTP server address
   ntp.begin(123);
-  WiFi.hostByName(ntpServerName, timeServerIP);
+  for (uint8_t i = 0; i < 5; i++) {
+    if (WiFi.hostByName(ntpServerName[now_ntp].c_str(), timeServerIP)) break;
+    now_ntp = (now_ntp + 1) % 5; //最多5个ntp
+  }
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   packetBuffer[0] = 0b11100011;   // LI, Version, Mode
   packetBuffer[1] = 0;     // Stratum, or type of clock

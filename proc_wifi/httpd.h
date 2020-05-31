@@ -219,6 +219,7 @@ void set_php() {
              "子网掩码:<input name=netmask size=8 value='" + netmask.toString() + "'>"
              "网关:<input name=gateway size=8 value='" + gateway.toString() + "'>"
              "dns:<input name=dns size=8 value='" + dns.toString() + "'><br>"
+             "ntp:<input name=ntp size=20 value=" + ntpServerName[0] + "><br>"
              "<hr>可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
              "url0:<input maxlength=100  size=50 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=50 type=text value='" + get_url(1) + "' name=url1><br>"
@@ -412,9 +413,9 @@ void save_php() {
         dns.fromString(httpd.arg(i));
       }
     } else if (httpd.argName(i).compareTo("ntp") == 0) {
-      if (ntp_server != httpd.arg(i)) {
+      if (ntpServerName[0] != httpd.arg(i)) {
         set_change |= NET_CHANGE;
-        ntp_server = httpd.arg(i);
+        ntpServerName[0] = httpd.arg(i);
       }
     } else if (httpd.argName(i).compareTo("rate") == 0) {
       if (rate != httpd.arg(i).toInt()) {
