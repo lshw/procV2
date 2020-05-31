@@ -15,8 +15,6 @@ String hostname = HOSTNAME;
 #include "proc.h"
 void setup()
 {
-  pinMode(_24V_OUT, OUTPUT);
-  digitalWrite(_24V_OUT, HIGH); //默认24V开启输出
   pinMode(PC_RESET, OUTPUT);
   digitalWrite(PC_RESET, LOW);
   pinMode(PC_POWER, OUTPUT);
@@ -26,6 +24,17 @@ void setup()
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
   ht16c21_setup();
+  if (!ram_check()) {
+    //上电
+    get_lcd_ram_7(); //从spiffs读取24V输出的状态
+  }
+  if (ram_buf[7] & 0b100) //lcd_ram[7] bit3是24V输出状态
+    _24v_out = HIGH;
+  else
+    _24v_out = LOW;
+  pinMode(_24V_OUT, OUTPUT);
+  digitalWrite(_24V_OUT, _24v_out);
+
   ht16c21_cmd(0x88, 1); //闪烁
   get_batt();
   proc = ram_buf[0];
@@ -60,6 +69,7 @@ void setup()
     delay(200);
     yield();
   }
+  get_mylink(); //定制的web左下角
 }
 
 bool httpd_up = false;

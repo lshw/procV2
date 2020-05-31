@@ -16,40 +16,35 @@ ESP8266WebServer httpd(80);
 String head, footer;
 String mylink;
 void update_head_footer() {
-  File fp;
-  if (SPIFFS.begin()) {
-    fp = SPIFFS.open("/mylink.txt", "r");
-    if (fp) {
-      mylink = fp.readString();
-      fp.close();
-    }
-  }
-  if (mylink == "") mylink = "在线文档:\r<a href=https://www.bjlx.org.cn/mode/929>https://www.bjlx.org.cn/node/929</a>";
-
   head =
     "<html>"
     "<head>"
     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
     "<script>"
-    "function ajax_get(url) {"
+    " function ajax_get(url) {"
     " xhr = new XMLHttpRequest();"
     " xhr.open('GET', url, true);"
     " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
     " xhr.send();"
-    "}"
-    "function goto_if(url,msg) {"
-    "if(confirm(msg))"
+    " }"
+    " function goto_if(url,msg) {"
+    " if(confirm(msg))"
     " location.replace(url);"
-    "}"
-    "function ajax_if(url,msg) {"
-    "if(confirm(msg))"
+    " else return false;"
+    " return true;"
+    " }"
+    " function ajax_if(url,msg) {"
+    " if(confirm(msg))"
     " ajax_get(url);"
-    "}"
-    "function modi(url,text,defaultext) {"
+    " else return false;"
+    " return true;"
+    " }"
+    " function modi(url,text,defaultext) {"
     " var data=prompt(text,defaultext);"
-    "if( data != defaultext)"
-    "location.replace(url+data);"
-    "return false;"
+    " if( data == defaultext)"
+    " return false;"
+    " location.replace(url+data);"
+    " return true;"
     "}"
     "</script>"
     "</head>"
@@ -60,6 +55,12 @@ void update_head_footer() {
     "<button onclick=ajax_if('/switch.php?b=RESET&t=4000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=4000','按下电源键?')>长按电源</button>";
+  get_batt();
+  if (digitalRead(_24V_OUT) == LOW)
+    head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已关闭</button>";
+  else
+    head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已开启</button>";
+
   footer =
     "<hr><table width=100%><tr>"
     "<td align=left>" + mylink + "</td>"
@@ -77,7 +78,7 @@ void handleRoot() {
     if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
       telnets += "<tr align=center><td><input type=checkbox";
       if (client_enable[i]) telnets += " checked";
-      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String((millis()-client_ms[i])/1000) + "</td><td>" + String(client_read[i]) + "</td></tr>";
+      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String((millis() - client_ms[i]) / 1000) + "</td><td>" + String(client_read[i]) + "</td></tr>";
     }
   if (telnets != "") telnets = "<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>" + telnets + "</table>";
 
@@ -133,9 +134,23 @@ void switch_php() {
     pcResetTicker.detach();
     pcResetTicker.attach_ms(t, pcResetUp);
   } else if (pin == "_24V_OUT") {
-    digitalWrite(_24V_OUT, LOW);
-    pc24vOutTicker.detach();
-    pc24vOutTicker.attach_ms(t, pc24vOn);
+    if (t != _24v_out) {
+      if (t == 0) {
+        ram_buf[7] &= ~0b100;
+        digitalWrite(_24V_OUT, LOW);
+      } else {
+        ram_buf[7] |= 0b100;
+        digitalWrite(_24V_OUT, HIGH);
+      }
+      _24v_out = t;
+      send_ram();
+      SPIFFS.begin();
+      File fp = SPIFFS.open("/lcd_ram_7.txt", "w");
+      fp.write(ram_buf[7]);
+      fp.close();
+      update_head_footer();
+      yield();
+    }
   }
   httpd.send(200, "text/html", pin + " " + String(t) + "ms");
   httpd.client().stop();
