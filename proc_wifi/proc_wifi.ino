@@ -19,10 +19,6 @@ void setup()
   digitalWrite(PC_RESET, LOW);
   pinMode(PC_POWER, OUTPUT);
   digitalWrite(PC_POWER, LOW);
-  _myTicker.attach(1, timer1s);
-  Serial.begin(115200);
-  hostname += String(ESP.getChipId(), HEX);
-  WiFi.hostname(hostname);
   ht16c21_setup();
   if (!ram_check()) {
     //上电
@@ -36,6 +32,12 @@ void setup()
   digitalWrite(_24V_OUT, _24v_out);
 
   ht16c21_cmd(0x88, 1); //闪烁
+
+  _myTicker.attach(1, timer1s);
+  hostname += String(ESP.getChipId(), HEX);
+  WiFi.hostname(hostname);
+  get_comset();
+  Serial.begin(rate, comsets[comset]);
   get_batt();
   proc = ram_buf[0];
   wifi_setup();

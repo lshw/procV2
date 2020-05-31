@@ -50,7 +50,7 @@ void update_head_footer() {
     "</head>"
     "<body>"
     "SN:<mark>" + hostname + "</mark> &nbsp; "
-    "版本:<mark>" VER "</mark><br>"
+    "版本:<mark>" VER "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=4000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
@@ -84,7 +84,7 @@ void handleRoot() {
 
   httpd.send(200, "text/html",
              head +
-             "<a href=/set.php><button>网络设置及升级</button></a>"
+             "<a href=/set.php><button>设置</button></a>"
              + exit_button + telnets + footer
             );
   httpd.client().stop();
@@ -163,7 +163,7 @@ void set_php() {
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   if (proc == OTA_MODE) {
-    update_auth = "登陆名:<input type=text value="
+    update_auth = "<hr>登陆名:<input type=text value="
                   + String((char *)www_username) +
                   " name=username size=10 maxsize=100>&nbsp;密码:<input type=text value="
                   + String((char *) www_password) +
@@ -193,6 +193,8 @@ void set_php() {
                 + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; "
                 + "电压:<mark>" + String(v) + "</mark>V<br>";
   }
+  String comset_option;
+  for (uint8_t i = 0; i < sizeof(comsets) / sizeof(SerialConfig); i++) comset_option += "<option value=" + String(i) + ">" + comset_str[i] + "</option>";
 
   httpd.send(200,
              "text/html",
@@ -200,17 +202,31 @@ void set_php() {
              "<a href=/><button>返回首页</button></a>"
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
-             "<hr><form action=/save.php method=post>"
+             "<form action=/save.php method=post>"
              "输入ssid:passwd(可以多行多个)<br>"
              "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-             "可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
-             "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-             "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-             "间隔时间:<input maxlength=100  size=10 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
+             "<hr>可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
+             "url0:<input maxlength=100  size=50 type=text value='" + get_url(0) + "' name=url><br>"
+             "url1:<input maxlength=100  size=50 type=text value='" + get_url(1) + "' name=url1><br>"
+             "间隔时间:<input maxlength=3  size=3 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
              + update_auth +
-             "自定义html块(页面左下角,清空恢复原始设置):<br>"
+             "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
              "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
-             "<input type=submit name=submit value=保存>"
+             "<hr>串口设置:<select name=rate><option value=" + rate + ">" + rate + "</option>"
+             "<option value='460800'>460800</option>"
+             "<option value='230400'>230400</option>"
+             "<option value='115200'>115200</option>"
+             "<option value='57600'>57600</option>"
+             "<option value='38400'>38400</option>"
+             "<option value='19200'>19200</option>"
+             "<option value='9600'>9600</option>"
+             "<option value='4800'>4800</option>"
+             "<option value='2400'>2400</option>"
+             "<option value='1200'>1200</option></select>"
+             "<select name=comset><option value=" + comset + ">" + comset_str[comset] + "</option>"
+             + comset_option +
+             "</select>"
+             "<hr><input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
@@ -300,7 +316,7 @@ void add_ssid_php() {
 void save_php() {
   File fp;
   String url, data;
-  yield();
+  bool com_change = false;
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
@@ -356,6 +372,16 @@ void save_php() {
         fp.close();
         update_head_footer();
       }
+    } else if (httpd.argName(i).compareTo("rate") == 0) {
+      if (rate != httpd.arg(i).toInt()) {
+        set_change |= COM_CHANGE;
+        rate = httpd.arg(i).toInt();
+      }
+    } else if (httpd.argName(i).compareTo("comset") == 0) {
+      if (comset != httpd.arg(i).toInt()) {
+        set_change |= COM_CHANGE;
+        comset = httpd.arg(i).toInt();
+      }
     } else if (httpd.argName(i).compareTo("username") == 0) {
       strncpy(www_username, httpd.arg(i).c_str(), sizeof(www_username));
       fp = SPIFFS.open("/http_auth.txt", "w");
@@ -371,10 +397,20 @@ void save_php() {
     }
   }
   url = "";
-  SPIFFS.end();
   wifi_setup();
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
   httpd.client().stop();
+  yield();
+  if (com_change) {
+    fp = SPIFFS.open("/comset.txt", "w");
+    fp.println(rate);
+    fp.println(comset);
+    fp.println(comset_str[comset]);
+    fp.close();
+    Serial.begin(rate, comsets[comset]);
+    update_head_footer();
+  }
+  SPIFFS.end();
 }
 void httpd_listen() {
   yield();

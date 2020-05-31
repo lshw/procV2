@@ -23,6 +23,62 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 //0,1-正常 2-OTA
 #define OTA_MODE 2
 uint8_t _24v_out;
+uint32_t rate = 115200; //串口速率
+uint8_t comset;
+String comset_str[] = {
+  "8N1",
+  "7N1",
+  "6N1",
+  "5N1",
+  "8N2",
+  "7N2",
+  "6N2",
+  "5N2",
+  "8E1",
+  "7E1",
+  "6E1",
+  "5E1",
+  "8E2",
+  "7E2",
+  "6E2",
+  "5E2",
+  "8O1",
+  "7O1",
+  "6O1",
+  "5O1",
+  "8O2",
+  "7O2",
+  "6O2",
+  "5O2"
+};
+SerialConfig comsets[] {
+  SERIAL_8N1,
+  SERIAL_7N1,
+  SERIAL_6N1,
+  SERIAL_5N1,
+  SERIAL_8N2,
+  SERIAL_7N2,
+  SERIAL_6N2,
+  SERIAL_5N2,
+  SERIAL_8E1,
+  SERIAL_6E1,
+  SERIAL_7E1,
+  SERIAL_5E1,
+  SERIAL_8E2,
+  SERIAL_7E2,
+  SERIAL_6E2,
+  SERIAL_5E2,
+  SERIAL_8O1,
+  SERIAL_7O1,
+  SERIAL_6O1,
+  SERIAL_5O1,
+  SERIAL_8O2,
+  SERIAL_7O2,
+  SERIAL_6O2,
+  SERIAL_5O2
+};
+
+
 #define ZMD_BUF_SIZE 100
 char zmd_disp[ZMD_BUF_SIZE];
 uint8_t zmd_offset = 0, zmd_size = 0;
@@ -233,6 +289,18 @@ String fp_gets(File fp) {
   }
   ret.trim();
   return ret;
+}
+void get_comset() {
+  File fp;
+  comset = 0;
+  if (!SPIFFS.begin()) return;
+  fp = SPIFFS.open("/comset.txt", "r");
+  if (fp) {
+    rate = fp_gets(fp).toInt();
+    comset = fp_gets(fp).toInt();
+    fp.close();
+  }
+  Serial.begin(rate, comsets[comset]);
 }
 
 void get_http_auth() {
