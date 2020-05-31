@@ -60,6 +60,8 @@ void update_head_footer() {
     head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已关闭</button>";
   else
     head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已开启</button>";
+  head +=   "<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>";
+
 
   footer =
     "<hr><table width=100%><tr>"
@@ -154,6 +156,11 @@ void switch_php() {
   }
   httpd.send(200, "text/html", pin + " " + String(t) + "ms");
   httpd.client().stop();
+  if (pin == "reboot") {
+    ht16c21_cmd(0x88, 1); //闪烁
+    yield();
+    ESP.restart();
+  }
 }
 void set_php() {
   String wifi_stat, wifi_scan;
