@@ -8,6 +8,7 @@ WiFiServer tcpServer(23);
 WiFiClient tcpClients[MAX_SRV_CLIENTS];
 uint8_t client_enable[MAX_SRV_CLIENTS];
 uint16_t client_read[MAX_SRV_CLIENTS];
+uint32_t client_ms[MAX_SRV_CLIENTS];
 void proc_setup() {
   tcpServer.begin();
   tcpServer.setNoDelay(true);
@@ -22,6 +23,7 @@ void proc_loop() {
       if (!tcpClients[i]) { // equivalent to !tcpClients[i].connected()
         tcpClients[i] = tcpServer.available();
         client_read[i] = 0;
+        client_ms[i] = millis();
         if (proc == OTA_MODE)
           client_enable[i] = 1;
         else {

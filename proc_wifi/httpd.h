@@ -63,7 +63,7 @@ void update_head_footer() {
   footer =
     "<hr><table width=100%><tr>"
     "<td align=left>" + mylink + "</td>"
-    "<td><td align=right>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
+    "<td><td align=right valign=bottom>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
@@ -75,11 +75,11 @@ void handleRoot() {
   if (proc != OTA_MODE) exit_button = "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
   for (uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
-      telnets += "<tr><td><input type=checkbox";
+      telnets += "<tr align=center><td><input type=checkbox";
       if (client_enable[i]) telnets += " checked";
-      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String(client_read[i]) + "</td></tr>";
+      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String((millis()-client_ms[i])/1000) + "</td><td>" + String(client_read[i]) + "</td></tr>";
     }
-  if (telnets != "") telnets = "<hr><table border=1><tr><td>允许</td><td>IP:PORT</td><td>收到字节</td></tr>" + telnets + "</table>";
+  if (telnets != "") telnets = "<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>" + telnets + "</table>";
 
   httpd.send(200, "text/html",
              head +
@@ -193,7 +193,7 @@ void set_php() {
              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
              "间隔时间:<input maxlength=100  size=10 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
              + update_auth +
-             "自定义链接(html格式,清空恢复原始设置):<br>"
+             "自定义html块(页面左下角,清空恢复原始设置):<br>"
              "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<input type=submit name=submit value=保存>"
              "</form>"
