@@ -23,6 +23,12 @@ uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进�
 //0,1-正常 2-OTA
 #define OTA_MODE 2
 uint8_t _24v_out;
+bool is_dhcp = true;
+IPAddress local_ip = {192, 168, 1, 2};
+IPAddress netmask = {255, 255, 255, 0};
+IPAddress gateway = {192, 168, 1, 1};
+IPAddress dns = {8, 8, 8, 8};
+String ntp_server;
 uint32_t rate = 115200; //串口速率
 uint8_t comset;
 String comset_str[] = {
@@ -303,6 +309,22 @@ void get_comset() {
   Serial.begin(rate, comsets[comset]);
 }
 
+void get_network() {
+  File fp;
+  comset = 0;
+  if (!SPIFFS.begin()) return;
+  fp = SPIFFS.open("/network.txt", "r");
+  if (fp) {
+    if (fp_gets(fp).toInt() == 0) is_dhcp = false;
+    else is_dhcp = true;
+    local_ip.fromString(fp_gets(fp));
+    netmask.fromString(fp_gets(fp));
+    gateway.fromString(fp_gets(fp));
+    dns.fromString(fp_gets(fp));
+    fp.close();
+  }
+}
+
 void get_http_auth() {
   File fp;
   if (!SPIFFS.begin()) return;
@@ -383,5 +405,33 @@ void zmd() {  //1s 一次Ticker
   disp(disp_buf);
   zmd_offset = (zmd_offset + 1) % zmd_size;
 }
-
+uint8_t set_change = 0;
+#define COM_CHANGE 1
+#define NET_CHANGE 2
+void set_save() {
+  File fp;
+  if (!SPIFFS.begin()) return;
+  if (set_change & COM_CHANGE) {
+    fp = SPIFFS.open("/comset.txt", "w");
+    fp.println(rate);
+    fp.println(comset);
+    fp.println(comset_str[comset]);
+    fp.close();
+    Serial.begin(rate, comsets[comset]);
+    void update_head_footer();
+  }
+  if (set_change & NET_CHANGE) {
+    fp = SPIFFS.open("/network.txt", "w");
+    fp.println(is_dhcp);
+    fp.println(local_ip);
+    fp.println(netmask);
+    fp.println(gateway);
+    fp.println(dns);
+    fp.println(ntp_server);
+    fp.close();
+    if (!is_dhcp)
+      WiFi.config(local_ip, dns, gateway, netmask);
+  }
+  set_change = 0;
+}
 #endif

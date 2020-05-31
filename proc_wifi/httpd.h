@@ -202,7 +202,9 @@ void set_php() {
   }
   String comset_option;
   for (uint8_t i = 0; i < sizeof(comsets) / sizeof(SerialConfig); i++) comset_option += "<option value=" + String(i) + ">" + comset_str[i] + "</option>";
-
+  String select_dhcp = "", select_ip = "";
+  if (is_dhcp) select_dhcp = "checked";
+  else select_ip = "checked";
   httpd.send(200,
              "text/html",
              head +
@@ -212,6 +214,11 @@ void set_php() {
              "<form action=/save.php method=post>"
              "输入ssid:passwd(可以多行多个)<br>"
              "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
+             "<input type=radio name=is_dhcp value=1 " + select_dhcp + ">dhcp&nbsp;<input type=radio name=is_dhcp value=0 " + select_ip + ">"
+             "ip:<input name=local_ip size=8 value='" + local_ip.toString() + "'>"
+             "子网掩码:<input name=netmask size=8 value='" + netmask.toString() + "'>"
+             "网关:<input name=gateway size=8 value='" + gateway.toString() + "'>"
+             "dns:<input name=dns size=8 value='" + dns.toString() + "'><br>"
              "<hr>可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
              "url0:<input maxlength=100  size=50 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=50 type=text value='" + get_url(1) + "' name=url1><br>"
@@ -323,7 +330,6 @@ void add_ssid_php() {
 void save_php() {
   File fp;
   String url, data;
-  bool com_change = false;
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   SPIFFS.begin();
@@ -337,8 +343,6 @@ void save_php() {
       if (data.length() > 8) {
         fp = SPIFFS.open("/ssid.txt", "w");
         fp.println(data);
-        fp.close();
-        fp = SPIFFS.open("/ssid.txt", "r");
         fp.close();
       }
     } else if (httpd.argName(i).compareTo("url") == 0) {
@@ -379,6 +383,39 @@ void save_php() {
         fp.close();
         update_head_footer();
       }
+    } else if (httpd.argName(i).compareTo("is_dhcp") == 0) {
+      if (httpd.arg(i) == "1" && !is_dhcp) {
+        set_change |= NET_CHANGE;
+        is_dhcp = true;
+      } else if (httpd.arg(i) == "0" && is_dhcp) {
+        set_change |= NET_CHANGE;
+        is_dhcp = false;
+      }
+    } else if (httpd.argName(i).compareTo("local_ip") == 0) {
+      if (local_ip.toString() != httpd.arg(i)) {
+        set_change |= NET_CHANGE;
+        local_ip.fromString(httpd.arg(i));
+      }
+    } else if (httpd.argName(i).compareTo("netmask") == 0) {
+      if (netmask.toString() != httpd.arg(i)) {
+        set_change |= NET_CHANGE;
+        netmask.fromString(httpd.arg(i));
+      }
+    } else if (httpd.argName(i).compareTo("gateway") == 0) {
+      if (gateway.toString() != httpd.arg(i)) {
+        set_change |= NET_CHANGE;
+        gateway.fromString(httpd.arg(i));
+      }
+    } else if (httpd.argName(i).compareTo("dns") == 0) {
+      if (dns.toString() != httpd.arg(i)) {
+        set_change |= NET_CHANGE;
+        dns.fromString(httpd.arg(i));
+      }
+    } else if (httpd.argName(i).compareTo("ntp") == 0) {
+      if (ntp_server != httpd.arg(i)) {
+        set_change |= NET_CHANGE;
+        ntp_server = httpd.arg(i);
+      }
     } else if (httpd.argName(i).compareTo("rate") == 0) {
       if (rate != httpd.arg(i).toInt()) {
         set_change |= COM_CHANGE;
@@ -407,16 +444,7 @@ void save_php() {
   wifi_setup();
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
   httpd.client().stop();
-  yield();
-  if (com_change) {
-    fp = SPIFFS.open("/comset.txt", "w");
-    fp.println(rate);
-    fp.println(comset);
-    fp.println(comset_str[comset]);
-    fp.close();
-    Serial.begin(rate, comsets[comset]);
-    update_head_footer();
-  }
+  //  yield();
   SPIFFS.end();
 }
 void httpd_listen() {

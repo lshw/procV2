@@ -17,7 +17,6 @@ HTTPClient http;
 String ssid, passwd, bssidstr;
 uint8_t bssid[7];
 uint32_t channel = 0;
-IPAddress local_ip, gateway, netmask, dns1, dns2;
 uint8_t hex2ch(char dat) {
   dat |= 0x20; //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
@@ -35,6 +34,8 @@ void wifi_setup() {
   } else  { //测温时， 只用client
     WiFi.mode(WIFI_STA);
   }
+  if(!is_dhcp)
+    WiFi.config(local_ip, dns, gateway, netmask);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {

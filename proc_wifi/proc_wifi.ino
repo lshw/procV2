@@ -36,6 +36,7 @@ void setup()
   _myTicker.attach(1, timer1s);
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
+  get_network();
   get_comset();
   Serial.begin(rate, comsets[comset]);
   get_batt();
@@ -119,5 +120,6 @@ void loop()
     wget();
     yield();
   }
+  if (set_change) set_save();
   system_soft_wdt_feed();
 }
