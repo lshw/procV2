@@ -106,6 +106,7 @@ uint8_t timer3 = 10;
 DNSServer dnsServer;
 bool wifi_connected_is_ok();
 void update_disp() {
+  uint8_t zmdsize=strlen(zmd_disp);
   if (wifi_connected_is_ok()) {
     if (proc == OTA_MODE) {
       snprintf(zmd_disp, sizeof(zmd_disp), " OTA %s -%s-  ", WiFi.localIP().toString().c_str(), VER);
@@ -121,6 +122,7 @@ void update_disp() {
     else
       snprintf(zmd_disp, sizeof(zmd_disp), " %3.2f -%s-  ", v, VER);
   }
+  if(zmdsize!=strlen(zmd_disp)) zmd_offset=0;//长度有变化， 就从头开始显示
 }
 void timer1s() {
   char disp_buf[20];
