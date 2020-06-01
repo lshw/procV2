@@ -20,6 +20,8 @@ void setup()
     _24v_out = HIGH;
   else
     _24v_out = LOW;
+  analogWriteFreq(400);
+  analogWrite(PWM, nvram.pwm);
   pinMode(_24V_OUT, OUTPUT);
   digitalWrite(_24V_OUT, _24v_out);
   pinMode(PC_RESET, OUTPUT);
@@ -41,8 +43,6 @@ void setup()
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);
   get_network();
-  get_comset();
-  Serial.begin(rate, comsets[comset]);
   get_batt();
   proc = nvram.proc;
   wifi_setup();

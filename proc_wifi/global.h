@@ -13,7 +13,6 @@ bool telnet_auth = false;
 bool run_zmd = true;
 uint8_t update_time;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
-
 char www_username[100] = "root";
 char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;

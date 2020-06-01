@@ -21,18 +21,32 @@ void update_head_footer() {
     "<html>"
     "<head>"
     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+    "<style type='text/css'>"
+    "hide {display:none;}"
+    "unhide {display:inline;}"
+    "</style>"
     "<script>"
+    " pwm=" + String(nvram.pwm) + ";"
     " function ajax_get(url) {"
     " xhr = new XMLHttpRequest();"
     " xhr.open('GET', url, true);"
     " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
     " xhr.send();"
     " }"
+    " function set_val(id,val) {"
+    "document.getElementById(id).textContent=val;"
+    " }"
     " function goto_if(url,msg) {"
     " if(confirm(msg))"
     " location.replace(url);"
     " else return false;"
     " return true;"
+    " }"
+    " function hide(id){"
+    " document.getElementById(id).style.display='none';"
+    " }"
+    " function unhide(id){"
+    " document.getElementById(id).style.display='inline';"
     " }"
     " function ajax_if(url,msg) {"
     " if(confirm(msg))"
@@ -47,6 +61,20 @@ void update_head_footer() {
     " location.replace(url+data);"
     " return true;"
     "}"
+    " function setpwm(val) {"
+    " if(val<1) val=1;"
+    " if(val>1019) val=1019;"
+    " pwm=val;"
+    " set_val('pwm','pwm:'+val);"
+    " ajax_get('/switch.php?b=PWM&t='+val);"
+    "}"
+    " function ajax_modi(url,text,defaultext) {"
+    " var data=prompt(text,defaultext);"
+    " if( data == defaultext)"
+    " return false;"
+    " ajax_get(url+data);"
+    " return true;"
+    "}"
     "</script>"
     "</head>"
     "<body>"
@@ -55,7 +83,15 @@ void update_head_footer() {
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=4000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
-    "<button onclick=ajax_if('/switch.php?b=POWER&t=4000','按下电源键?')>长按电源</button>";
+    "<button onclick=ajax_if('/switch.php?b=POWER&t=4000','按下电源键?')>长按电源</button>"
+    "<span style='white-space: nowrap;'><span id='a1' style='display:none'>"
+    "<button onclick=setpwm(pwm-50);><<</button>"
+    "<button onclick=setpwm(pwm-10);><</button></span>"
+    "<button onclick=unhide('a1');unhide('a2');setpwm(Number(prompt('输入pwm值(0-1023)',pwm)));><span id=pwm>pwm:"
+    + nvram.pwm + "</span></button>"
+    "<span id=a2 style='display:none'><button onclick=setpwm(pwm+10);>></button>"
+    "<button onclick=setpwm(pwm+50);>>></button></span>"
+    "</span>";
   get_batt();
   if (digitalRead(_24V_OUT) == LOW)
     head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已关闭</button>";
@@ -136,6 +172,14 @@ void switch_php() {
     digitalWrite(PC_RESET, HIGH);
     pcResetTicker.detach();
     pcResetTicker.attach_ms(t, pcResetUp);
+  } else if (pin == "PWM") {
+    if (t > 1019) t = 1019;
+    if (t < 1) t = 1;
+    if (nvram.pwm != t) {
+      nvram.pwm = t;
+      analogWrite(PWM, t);
+      nvram.change = 1;
+    }
   } else if (pin == "_24V_OUT") {
     if (t != _24v_out) {
       if (t == 0) {

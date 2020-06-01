@@ -170,8 +170,6 @@ bool http_update()
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
-      nvram.data[PROC] = 0;
-      save_nvram();
       ESP.restart();
       break;
 
