@@ -97,7 +97,6 @@ uint8_t zmd_offset = 0, zmd_size = 0;
 uint16_t http_get(uint8_t);
 void send_ram();
 void test();
-void zmd();
 uint8_t test_t = 0;
 float get_batt();
 float v;
@@ -106,7 +105,7 @@ uint8_t timer3 = 10;
 DNSServer dnsServer;
 bool wifi_connected_is_ok();
 void update_disp() {
-  uint8_t zmdsize=strlen(zmd_disp);
+  uint8_t zmdsize = strlen(zmd_disp);
   if (wifi_connected_is_ok()) {
     if (proc == OTA_MODE) {
       snprintf(zmd_disp, sizeof(zmd_disp), " OTA %s -%s-  ", WiFi.localIP().toString().c_str(), VER);
@@ -122,7 +121,7 @@ void update_disp() {
     else
       snprintf(zmd_disp, sizeof(zmd_disp), " %3.2f -%s-  ", v, VER);
   }
-  if(zmdsize!=strlen(zmd_disp)) zmd_offset=0;//长度有变化， 就从头开始显示
+  if (zmdsize != strlen(zmd_disp)) zmd_offset = 0; //长度有变化， 就从头开始显示
 }
 void timer1s() {
   char disp_buf[20];
@@ -385,36 +384,32 @@ void pcResetUp() {
   pcResetTicker.detach();
 }
 
-bool no_dot() {//判断显示是否有效,并填充disp_buf
-  uint8_t i = 0, i0 = 0, dots[8];
-  memset(disp_buf, 0, sizeof(disp_buf));
-  //  memset(dots,0,sizeof(dots));
-  while (i < 5) {
-    if (zmd_disp[zmd_offset + i0] == '.') dots[i0] = '.';
-    else {
-      dots[i0] = '0';
-      i++;
-    }
-    disp_buf[i0] = zmd_disp[(zmd_offset + i0) % zmd_size];
-    i0++;
-    if (i0 == zmd_size) return true; //循环了
-  }// disp[]='.123.45.' -> dots[]='.00.0.'
-  if (dots[0] == '.' || dots[1] == '.' || dots[5] == '.' || dots[6] == '.' )
-    return false;
-  else
-    return true;
-}
-
 void zmd() {  //1s 一次Ticker
+  uint8_t i = 0, i0 = 0;
   if (!wifi_connected_is_ok()) return;
   zmd_size = strlen(zmd_disp);
   if (zmd_size == 0) return;
   if (zmd_size < zmd_offset) zmd_offset = 0;
-  while (!no_dot())
+  for (i = 0; i < 10; i++) { //跳过第一个点
+    if (zmd_disp[zmd_offset] != '.') break;
     zmd_offset = (zmd_offset + 1) % zmd_size;
+  }
+
+  memset(disp_buf,' ',sizeof(disp_buf));
+  for (i = 0; i < sizeof(disp_buf); i++){
+    disp_buf[i] = zmd_disp[(zmd_offset + i) % zmd_size];
+    if(disp_buf[i]!='.') i0++;
+    if(i0>=5) break;
+  }
+  if (disp_buf[1] == '.') { //第一个字母后面是点，就把第一个字母，显示为空格
+    for (i = 0; i < sizeof(disp_buf)-1; i++)
+      disp_buf[i] = disp_buf[i+1];
+    disp_buf[0] = ' ';
+  }
   disp(disp_buf);
   zmd_offset = (zmd_offset + 1) % zmd_size;
 }
+
 uint8_t set_change = 0;
 #define COM_CHANGE 1
 #define NET_CHANGE 2
