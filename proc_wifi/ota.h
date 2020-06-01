@@ -9,7 +9,6 @@ extern float get_batt();
 extern uint32_t ap_on_time;
 extern char ram_buf[10];
 extern DNSServer dnsServer;
-void send_ram();
 void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
@@ -24,6 +23,8 @@ void ota_setup() {
   });
   ArduinoOTA.onEnd([]() {
     ht16c21_cmd(0x88, 1); //闪烁
+    ram_buf[7] += NVRAM7_UPDATE;
+    send_ram();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     sprintf(disp_buf, "OTA.%02d", progress * 99 / total );

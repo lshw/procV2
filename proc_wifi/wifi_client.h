@@ -34,7 +34,7 @@ void wifi_setup() {
   } else  { //测温时， 只用client
     WiFi.mode(WIFI_STA);
   }
-  if(!is_dhcp)
+  if (!is_dhcp)
     WiFi.config(local_ip, dns, gateway, netmask);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
   if (SPIFFS.begin()) {
@@ -91,6 +91,7 @@ bool wifi_connected_is_ok() {
 
 uint16_t http_get(uint8_t no) {
   char key[17];
+  if (no > 1) no = 1;
   String url0 = get_url(no);
   if (url0.indexOf('?') > 0)
     url0 += '&';
@@ -107,13 +108,7 @@ uint16_t http_get(uint8_t no) {
       delay(20);
       continue;
     }
-    // httpCode will be negative on error
     if (httpCode >= 200 && httpCode <= 299) {
-      // HTTP header has been send and Server response header has been handled
-      if (no == 0) ram_buf[7] &= ~2;
-      else ram_buf[7] |= 2; //bit2表示上次完成通讯用的是哪个url 0:url0 2:url1
-      send_ram();
-      // file found at server
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
         payload.toCharArray(disp_buf, 15); //.1.2.3.4.5,1800
@@ -153,16 +148,17 @@ void update_progress(int cur, int total) {
   char disp_buf[6];
   sprintf(disp_buf, "HUP.%02d", cur * 99 / total);
   disp(disp_buf);
-  ht16c21_cmd(0x88, 1); //闪烁
 }
 
 bool http_update()
 {
   disp("H UP. ");
-  String update_url = "http://www.anheng.com.cn/proc_wifi.bin"; // get_url((ram_buf[7] >> 1) & 1) + "?p=update&sn=" + String(hostname) + "&ver=" VER;
+  String update_url = "http://www.anheng.com.cn/proc_wifi.bin";
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return  ret = ESPhttpUpdate.update(update_url);
   update_url = "";
+  ram_buf[7] |= NVRAM7_UPDATE;
+  send_ram();
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
@@ -174,6 +170,7 @@ bool http_update()
       break;
 
     case HTTP_UPDATE_OK:
+      ht16c21_cmd(0x88, 1); //闪烁
       return true;
       break;
   }

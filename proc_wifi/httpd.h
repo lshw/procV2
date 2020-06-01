@@ -138,10 +138,10 @@ void switch_php() {
   } else if (pin == "_24V_OUT") {
     if (t != _24v_out) {
       if (t == 0) {
-        ram_buf[7] &= ~0b100;
+        ram_buf[7] &= ~ NVRAM7_24V;
         digitalWrite(_24V_OUT, LOW);
       } else {
-        ram_buf[7] |= 0b100;
+        ram_buf[7] |= NVRAM7_24V;
         digitalWrite(_24V_OUT, HIGH);
       }
       _24v_out = t;
@@ -487,6 +487,8 @@ void httpd_listen() {
                  "</html>"
                 );
       ht16c21_cmd(0x88, 1); //闪烁
+      ram_buf[7] += NVRAM7_UPDATE;
+      send_ram();
       delay(5);
       ESP.restart();
     }

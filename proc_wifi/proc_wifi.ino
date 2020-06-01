@@ -24,7 +24,7 @@ void setup()
     //上电
     get_lcd_ram_7(); //从spiffs读取24V输出的状态
   }
-  if (ram_buf[7] & 0b100) //lcd_ram[7] bit3是24V输出状态
+  if (ram_buf[7] & NVRAM7_24V) //lcd_ram[7] bit3是24V输出状态
     _24v_out = HIGH;
   else
     _24v_out = LOW;
@@ -32,7 +32,12 @@ void setup()
   digitalWrite(_24V_OUT, _24v_out);
 
   ht16c21_cmd(0x88, 1); //闪烁
-
+  if (ram_buf[7] & NVRAM7_UPDATE) {
+    disp("-" VER "-");
+    ram_buf[7] &= ~ NVRAM7_UPDATE;
+    send_ram();
+    delay(1000);
+  }
   _myTicker.attach(1, timer1s);
   hostname += String(ESP.getChipId(), HEX);
   WiFi.hostname(hostname);

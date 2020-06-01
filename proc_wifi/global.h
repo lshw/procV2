@@ -178,9 +178,10 @@ void timer1s() {
   run_zmd = true;
 }
 void wget() {
-  uint16_t httpCode = http_get((ram_buf[7] >> 1) & 1); //先试试上次成功的url
+  uint16_t httpCode = http_get( ram_buf[7] & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
-    httpCode = http_get((~ram_buf[7] >> 1) & 1); //再试试另一个的url
+    ram_buf[7] = (ram_buf[7] & ~ NVRAM7_URL) | ~ram_buf[7] & NVRAM7_URL;
+    httpCode = http_get(ram_buf[7] & NVRAM7_URL); //再试试另一个的url
   }
 }
 void test() {
