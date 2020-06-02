@@ -1,7 +1,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VER "1.64"
+#define VER "1.65"
+#define VERA ""
 
 #define _24V_OUT 13
 #define PC_RESET 15

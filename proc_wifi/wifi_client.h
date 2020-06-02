@@ -11,8 +11,7 @@ bool http_update();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 ESP8266WiFiMulti WiFiMulti;
 HTTPClient http;
-String ssid, passwd, bssidstr;
-uint8_t bssid[7];
+String ssid, passwd;
 uint8_t hex2ch(char dat) {
   dat |= 0x20; //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
