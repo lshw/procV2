@@ -1,3 +1,6 @@
+20200602
+nvram使用esp8266的rtc非易失ram代替 lcd ram
+
 20200531
 ntp服务器设置 1.64
 网络设置dhcp/static

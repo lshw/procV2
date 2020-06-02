@@ -15,27 +15,23 @@ String hostname = HOSTNAME;
 #include "proc.h"
 void setup()
 {
-  pinMode(PC_RESET, OUTPUT);
-  digitalWrite(PC_RESET, LOW);
-  pinMode(PC_POWER, OUTPUT);
-  digitalWrite(PC_POWER, LOW);
-  ht16c21_setup();
-  if (!ram_check()) {
-    //上电
-    get_lcd_ram_7(); //从spiffs读取24V输出的状态
-  }
-  if (ram_buf[7] & NVRAM7_24V) //lcd_ram[7] bit3是24V输出状态
+  load_nvram();
+  if (nvram.data[NVRAM7] & NVRAM7_24V) //lcd_ram[7] bit3是24V输出状态
     _24v_out = HIGH;
   else
     _24v_out = LOW;
   pinMode(_24V_OUT, OUTPUT);
   digitalWrite(_24V_OUT, _24v_out);
-
+  pinMode(PC_RESET, OUTPUT);
+  digitalWrite(PC_RESET, LOW);
+  pinMode(PC_POWER, OUTPUT);
+  digitalWrite(PC_POWER, LOW);
+  ht16c21_setup();
   ht16c21_cmd(0x88, 1); //闪烁
-  if (ram_buf[7] & NVRAM7_UPDATE) {
+  if (nvram.data[NVRAM7] & NVRAM7_UPDATE) {
     disp("-" VER "-");
-    ram_buf[7] &= ~ NVRAM7_UPDATE;
-    send_ram();
+    nvram.data[NVRAM7] &= ~ NVRAM7_UPDATE;
+    save_nvram();
     delay(1000);
   }
   _myTicker.attach(1, timer1s);
@@ -45,13 +41,13 @@ void setup()
   get_comset();
   Serial.begin(rate, comsets[comset]);
   get_batt();
-  proc = ram_buf[0];
+  proc = nvram.data[PROC];
   wifi_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
-      ram_buf[0] = 0;//ota以后，
+      nvram.data[PROC] = 0;//ota以后，
       disp(" OTA ");
       //      ota_test.attach(0.5, test);
       ota_setup();
@@ -59,12 +55,12 @@ void setup()
       break;
     default:
       proc_setup();
-      ram_buf[0] = OTA_MODE;
+      nvram.data[PROC] = OTA_MODE;
       sprintf(disp_buf, " %3.2f ", v);
       disp(disp_buf);
       break;
   }
-  send_ram();
+  save_nvram();
   update_disp();
   zmd();
   update_time = get_update_time();//检查升级的间隔小时

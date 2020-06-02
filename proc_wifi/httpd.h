@@ -5,6 +5,7 @@
 #include "wifi_client.h"
 #include "global.h"
 #include "proc.h"
+#include "nvram.h"
 extern void disp(char *);
 extern char ram_buf[10];
 extern String hostname;
@@ -138,18 +139,14 @@ void switch_php() {
   } else if (pin == "_24V_OUT") {
     if (t != _24v_out) {
       if (t == 0) {
-        ram_buf[7] &= ~ NVRAM7_24V;
+        nvram.data[NVRAM7] &= ~ NVRAM7_24V;
         digitalWrite(_24V_OUT, LOW);
       } else {
-        ram_buf[7] |= NVRAM7_24V;
+        nvram.data[NVRAM7] |= NVRAM7_24V;
         digitalWrite(_24V_OUT, HIGH);
       }
       _24v_out = t;
-      send_ram();
-      SPIFFS.begin();
-      File fp = SPIFFS.open("/lcd_ram_7.txt", "w");
-      fp.write(ram_buf[7]);
-      fp.close();
+      save_nvram();
       update_head_footer();
       yield();
     }
@@ -463,8 +460,9 @@ void httpd_listen() {
   httpd.on("/update.php", HTTP_POST, []() {
     if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
-    ram_buf[0] = 0;
-    send_ram();
+    nvram.data[PROC] = 0;
+    nvram.data[NVRAM7] += NVRAM7_UPDATE;
+    save_nvram();
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       httpd.send(200, "text/html", "<html>"
@@ -487,8 +485,6 @@ void httpd_listen() {
                  "</html>"
                 );
       ht16c21_cmd(0x88, 1); //闪烁
-      ram_buf[7] += NVRAM7_UPDATE;
-      send_ram();
       delay(5);
       ESP.restart();
     }
@@ -533,7 +529,8 @@ void ap_loop() {
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
       else {
-        ram_buf[0] = 0;
+        nvram.data[PROC] = 0;
+        save_nvram();
         disp("00000");
         ht16c21_cmd(0x84, 0);
         httpd.close();

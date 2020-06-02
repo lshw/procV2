@@ -9,10 +9,6 @@
 #define PWM 12
 #define DS 0
 
-#define NVRAM7_URL 2
-#define NVRAM7_24V 4
-#define NVRAM7_UPDATE 8
-
 #define DEFAULT_URL0 "http://temp.cfido.com:808/proc_wifi.php"
 #define DEFAULT_URL1 "http://temp2.wf163.com:808/proc_wifi.php"
 

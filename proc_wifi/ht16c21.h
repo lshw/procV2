@@ -23,7 +23,6 @@ void ht16c21_setup() {
 
   if (!load_ram() && !load_ram() && !load_ram()) {
     ram_buf[0] = 0xff; //读取错误
-    ram_buf[7] = 0; // 1 充电， 0 不充电
     send_ram();
   }
   ht16c21_cmd(0x84, 3); //1621文档20页 系统模式命令 开关ht1621时钟/显示  0-关闭  3-开启

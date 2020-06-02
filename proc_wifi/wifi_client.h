@@ -1,6 +1,7 @@
 #ifndef __WIFI_CLIENT_H__
 #define __WIFI_CLIENT_H__
 #include "config.h"
+#include "nvram.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFiMulti.h>
@@ -131,8 +132,8 @@ uint16_t http_get(uint8_t no) {
       }
     } else {
 
-      ram_buf[9] |= 0x10; //x1
-      send_ram();
+      //ram_buf[9] |= 0x10; //x1
+      //send_ram();
       if (httpCode > 0)
         sprintf(disp_buf, ".E %03d", httpCode);
       disp(disp_buf);
@@ -153,16 +154,20 @@ void update_progress(int cur, int total) {
 bool http_update()
 {
   disp("H UP. ");
+  if(nvram.data[NVRAM7] & NVRAM7_UPDATE) {
+    nvram.data[PROC] = 0;
+    nvram.data[NVRAM7] |= NVRAM7_UPDATE;
+    send_ram();
+  }
   String update_url = "http://www.anheng.com.cn/proc_wifi.bin";
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return  ret = ESPhttpUpdate.update(update_url);
   update_url = "";
-  ram_buf[7] |= NVRAM7_UPDATE;
-  send_ram();
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
-      ram_buf[0] = 0;
+      nvram.data[PROC] = 0;
+      save_nvram();
       ESP.restart();
       break;
 

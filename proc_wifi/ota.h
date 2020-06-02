@@ -7,24 +7,23 @@
 extern void disp(char *);
 extern float get_batt();
 extern uint32_t ap_on_time;
-extern char ram_buf[10];
 extern DNSServer dnsServer;
 void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
+    nvram.data[PROC] = 0;
+    nvram.data[NVRAM7] |= NVRAM7_UPDATE;
+    save_nvram();
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
     } else { // U_SPIFFS
       type = "filesystem";
     }
-    send_ram();
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
     type = "";
   });
   ArduinoOTA.onEnd([]() {
     ht16c21_cmd(0x88, 1); //闪烁
-    ram_buf[7] += NVRAM7_UPDATE;
-    send_ram();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     sprintf(disp_buf, "OTA.%02d", progress * 99 / total );
@@ -36,8 +35,8 @@ void ota_loop() {
   if ( millis() > ap_on_time) {
     if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
     else {
-      ram_buf[0] = 0;
-      send_ram();
+      nvram.data[PROC] = 0;
+      save_nvram();
       delay(2000);
       ESP.restart();
       return;

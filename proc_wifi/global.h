@@ -3,6 +3,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include "config.h"
+#include "nvram.h"
 #include "ht16c21.h"
 #include "Ticker.h"
 uint16_t timer1 = 0; //秒 定时测温
@@ -16,8 +17,6 @@ int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 char www_username[100] = "root";
 char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
-extern char ram_buf[10];
-extern char disp_buf[22];
 extern String mylink;
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
 //0,1-正常 2-OTA
@@ -90,7 +89,6 @@ SerialConfig comsets[] {
   SERIAL_5O2
 };
 
-
 #define ZMD_BUF_SIZE 100
 char zmd_disp[ZMD_BUF_SIZE];
 uint8_t zmd_offset = 0, zmd_size = 0;
@@ -127,8 +125,8 @@ void timer1s() {
   char disp_buf[20];
   if (timer3 > 0) {
     if (timer3 == 1) {
-      ram_buf[0] = 0;
-      send_ram();
+      nvram.data[PROC] = 0;
+      save_nvram();
     }
     timer3--;
   }
@@ -179,10 +177,10 @@ void timer1s() {
   run_zmd = true;
 }
 void wget() {
-  uint16_t httpCode = http_get( ram_buf[7] & NVRAM7_URL); //先试试上次成功的url
+  uint16_t httpCode = http_get( nvram.data[NVRAM7] & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
-    ram_buf[7] = (ram_buf[7] & ~ NVRAM7_URL) | ~ram_buf[7] & NVRAM7_URL;
-    httpCode = http_get(ram_buf[7] & NVRAM7_URL); //再试试另一个的url
+    nvram.data[NVRAM7] = (nvram.data[NVRAM7] & ~ NVRAM7_URL) | ~nvram.data[NVRAM7] & NVRAM7_URL;
+    httpCode = http_get(nvram.data[NVRAM7] & NVRAM7_URL); //再试试另一个的url
   }
 }
 void test() {
@@ -264,17 +262,6 @@ String get_ssid() {
     fp.close();
   }
   return ssid;
-}
-
-void get_lcd_ram_7() {
-  File fp;
-  if (!SPIFFS.begin()) return;
-  fp = SPIFFS.open("/lcd_ram_7.txt", "r");
-  if (fp) {
-    ram_buf[7] = fp.read();
-    fp.close();
-    send_ram();
-  }
 }
 
 uint8_t get_update_time() {
@@ -395,15 +382,15 @@ void zmd() {  //1s 一次Ticker
     zmd_offset = (zmd_offset + 1) % zmd_size;
   }
 
-  memset(disp_buf,' ',sizeof(disp_buf));
-  for (i = 0; i < sizeof(disp_buf); i++){
+  memset(disp_buf, ' ', sizeof(disp_buf));
+  for (i = 0; i < sizeof(disp_buf); i++) {
     disp_buf[i] = zmd_disp[(zmd_offset + i) % zmd_size];
-    if(disp_buf[i]!='.') i0++;
-    if(i0>=5) break;
+    if (disp_buf[i] != '.') i0++;
+    if (i0 >= 5) break;
   }
   if (disp_buf[1] == '.') { //第一个字母后面是点，就把第一个字母，显示为空格
-    for (i = 0; i < sizeof(disp_buf)-1; i++)
-      disp_buf[i] = disp_buf[i+1];
+    for (i = 0; i < sizeof(disp_buf) - 1; i++)
+      disp_buf[i] = disp_buf[i + 1];
     disp_buf[0] = ' ';
   }
   disp(disp_buf);
