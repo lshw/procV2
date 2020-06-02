@@ -98,7 +98,10 @@ uint16_t http_get(uint8_t no) {
     url0 += '&';
   else
     url0 += '?';
-  url0 += "ver="  VER  "&sn=" + hostname ;
+#ifndef VERA
+#define VERA
+#endif
+  url0 += "ver="  VER VERA "&sn=" + hostname ;
 
   http.begin( url0 ); //HTTP提交
   http.setTimeout(4000);
