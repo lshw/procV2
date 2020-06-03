@@ -138,8 +138,6 @@ void timer1s() {
     minute++;
     if (update_timeok > 0) update_timeok--;//定时器2 链接远程服务器
     if (minute >= 60) {
-      test_t = 0;
-      ota_test.attach(0.5, test);
       minute = 0;
       hour++;
       if (hour >= 24) {
