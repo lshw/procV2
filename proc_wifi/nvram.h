@@ -9,18 +9,23 @@ struct {
   uint8_t proc;
   uint16_t pwm;
   uint8_t nvram7;
+  uint32_t rate;
+  uint8_t comset;
+  uint8_t change;
   uint32_t crc32;
 } nvram;
 
 uint32_t calculateCRC32(const uint8_t *data, size_t length);
 void load_nvram() {
   ESP.rtcUserMemoryRead(0, (uint32_t*) &nvram, sizeof(nvram));
-  if (nvram.crc32 != calculateCRC32((uint8_t*) &nvram, sizeof(nvram)-sizeof(nvram.crc32))) {
+  if (nvram.crc32 != calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
     memset(&nvram, 0, sizeof(nvram));
   }
 }
 void save_nvram() {
-  nvram.crc32 = calculateCRC32((uint8_t*) &nvram, sizeof(nvram)-sizeof(nvram.crc32));
+  if (nvram.change == 0) return;
+  nvram.change = 0;
+  nvram.crc32 = calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32));
   ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
 }
 

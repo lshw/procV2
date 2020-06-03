@@ -11,9 +11,12 @@ extern DNSServer dnsServer;
 void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
-    nvram.proc = 0;
-    nvram.nvram7 |= NVRAM7_UPDATE;
-    save_nvram();
+    if (nvram.proc != 0 && nvram.nvram7 != (nvram.nvram7 | NVRAM7_UPDATE)) {
+      nvram.proc = 0;
+      nvram.nvram7 |= NVRAM7_UPDATE;
+      nvram.change = 1;
+      save_nvram();
+    }
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
     } else { // U_SPIFFS
@@ -35,8 +38,10 @@ void ota_loop() {
   if ( millis() > ap_on_time) {
     if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
     else {
-      nvram.proc = 0;
-      save_nvram();
+      if (nvram.proc != 0 ) {
+        nvram.proc = 0;
+        nvram.change = 1;
+      }
       delay(2000);
       ESP.restart();
       return;

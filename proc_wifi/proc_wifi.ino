@@ -34,7 +34,7 @@ void setup()
   if (nvram.nvram7 & NVRAM7_UPDATE) {
     disp("-" VER "-");
     nvram.nvram7 &= ~ NVRAM7_UPDATE;
-    save_nvram();
+    nvram.change = 1;
     delay(1000);
   }
   _myTicker.attach(1, timer1s);
@@ -50,7 +50,10 @@ void setup()
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
-      nvram.proc = 0;//ota以后，
+      if (nvram.proc != 0) {
+        nvram.proc = 0;//ota以后，
+        nvram.change = 1;
+      }
       disp(" OTA ");
       //      ota_test.attach(0.5, test);
       ota_setup();
@@ -58,7 +61,10 @@ void setup()
       break;
     default:
       proc_setup();
-      nvram.proc = OTA_MODE;
+      if (nvram.proc != OTA_MODE) {
+        nvram.proc = OTA_MODE;
+        nvram.change = 1;
+      }
       sprintf(disp_buf, " %3.2f ", v);
       disp(disp_buf);
       break;
@@ -124,6 +130,7 @@ void loop()
     wget();
     yield();
   }
+  if (nvram.change != 0) save_nvram();
   if (set_change) set_save();
   system_soft_wdt_feed();
 }

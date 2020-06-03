@@ -139,14 +139,19 @@ void switch_php() {
   } else if (pin == "_24V_OUT") {
     if (t != _24v_out) {
       if (t == 0) {
-        nvram.nvram7 &= ~ NVRAM7_24V;
+        if (nvram.nvram7 != nvram.nvram7 & ~ NVRAM7_24V) {
+          nvram.nvram7 &= ~ NVRAM7_24V;
+          nvram.change = 1;
+        }
         digitalWrite(_24V_OUT, LOW);
       } else {
-        nvram.nvram7 |= NVRAM7_24V;
+        if (nvram.nvram7 != nvram.nvram7 | NVRAM7_24V) {
+          nvram.nvram7 |= NVRAM7_24V;
+          nvram.change = 1;
+        }
         digitalWrite(_24V_OUT, HIGH);
       }
       _24v_out = t;
-      save_nvram();
       update_head_footer();
       yield();
     }
@@ -460,9 +465,12 @@ void httpd_listen() {
   httpd.on("/update.php", HTTP_POST, []() {
     if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
-    nvram.proc = 0;
-    nvram.nvram7 += NVRAM7_UPDATE;
-    save_nvram();
+    if (nvram.proc != 0 && nvram.nvram7 != (nvram.nvram7 | NVRAM7_UPDATE)) {
+      nvram.proc = 0;
+      nvram.nvram7 |= NVRAM7_UPDATE;
+      nvram.change = 1;
+      save_nvram();
+    }
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       httpd.send(200, "text/html", "<html>"
@@ -529,8 +537,10 @@ void ap_loop() {
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
       else {
-        nvram.proc = 0;
-        save_nvram();
+        if (nvram.proc != 0) {
+          nvram.proc = 0;
+          nvram.change = 1;
+        }
         disp("00000");
         ht16c21_cmd(0x84, 0);
         httpd.close();
