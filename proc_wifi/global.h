@@ -125,7 +125,7 @@ void timer1s() {
   char disp_buf[20];
   if (timer3 > 0) {
     if (timer3 == 1) {
-      nvram.data[PROC] = 0;
+      nvram.proc = 0;
       save_nvram();
     }
     timer3--;

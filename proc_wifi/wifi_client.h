@@ -158,7 +158,7 @@ bool http_update()
 {
   disp("H UP. ");
   if(nvram.nvram7 & NVRAM7_UPDATE) {
-    nvram.data[PROC] = 0;
+    nvram.proc = 0;
     nvram.nvram7 |= NVRAM7_UPDATE;
     send_ram();
   }

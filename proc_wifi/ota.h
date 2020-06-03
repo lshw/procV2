@@ -11,7 +11,7 @@ extern DNSServer dnsServer;
 void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
-    nvram.data[PROC] = 0;
+    nvram.proc = 0;
     nvram.nvram7 |= NVRAM7_UPDATE;
     save_nvram();
     if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -35,7 +35,7 @@ void ota_loop() {
   if ( millis() > ap_on_time) {
     if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
     else {
-      nvram.data[PROC] = 0;
+      nvram.proc = 0;
       save_nvram();
       delay(2000);
       ESP.restart();

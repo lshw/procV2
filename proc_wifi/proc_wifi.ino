@@ -44,13 +44,13 @@ void setup()
   get_comset();
   Serial.begin(rate, comsets[comset]);
   get_batt();
-  proc = nvram.data[PROC];
+  proc = nvram.proc;
   wifi_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
-      nvram.data[PROC] = 0;//ota以后，
+      nvram.proc = 0;//ota以后，
       disp(" OTA ");
       //      ota_test.attach(0.5, test);
       ota_setup();
@@ -58,7 +58,7 @@ void setup()
       break;
     default:
       proc_setup();
-      nvram.data[PROC] = OTA_MODE;
+      nvram.proc = OTA_MODE;
       sprintf(disp_buf, " %3.2f ", v);
       disp(disp_buf);
       break;

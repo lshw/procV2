@@ -460,7 +460,7 @@ void httpd_listen() {
   httpd.on("/update.php", HTTP_POST, []() {
     if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
-    nvram.data[PROC] = 0;
+    nvram.proc = 0;
     nvram.nvram7 += NVRAM7_UPDATE;
     save_nvram();
     httpd.sendHeader("Connection", "close");
@@ -529,7 +529,7 @@ void ap_loop() {
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
       else {
-        nvram.data[PROC] = 0;
+        nvram.proc = 0;
         save_nvram();
         disp("00000");
         ht16c21_cmd(0x84, 0);
