@@ -3,7 +3,6 @@
 
 //地址7
 #define PROC 0
-#define NVRAM7 7
 
 #define NVRAM7_URL    0b10
 #define NVRAM7_24V    0b100
@@ -11,6 +10,9 @@
 
 struct {
   uint32_t crc32;
+  uint8_t proc;
+  uint16_t pwm;
+  uint8_t nvram7;
   byte data[508];
 } nvram;
 

@@ -175,10 +175,10 @@ void timer1s() {
   run_zmd = true;
 }
 void wget() {
-  uint16_t httpCode = http_get( nvram.data[NVRAM7] & NVRAM7_URL); //先试试上次成功的url
+  uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
-    nvram.data[NVRAM7] = (nvram.data[NVRAM7] & ~ NVRAM7_URL) | ~nvram.data[NVRAM7] & NVRAM7_URL;
-    httpCode = http_get(nvram.data[NVRAM7] & NVRAM7_URL); //再试试另一个的url
+    nvram.nvram7 = (nvram.nvram7 & ~ NVRAM7_URL) | (~ nvram.nvram7 & NVRAM7_URL);
+    httpCode = http_get(nvram.nvram7 & NVRAM7_URL); //再试试另一个的url
   }
 }
 void test() {

@@ -12,7 +12,7 @@ void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
     nvram.data[PROC] = 0;
-    nvram.data[NVRAM7] |= NVRAM7_UPDATE;
+    nvram.nvram7 |= NVRAM7_UPDATE;
     save_nvram();
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";

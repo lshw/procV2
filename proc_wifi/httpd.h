@@ -139,10 +139,10 @@ void switch_php() {
   } else if (pin == "_24V_OUT") {
     if (t != _24v_out) {
       if (t == 0) {
-        nvram.data[NVRAM7] &= ~ NVRAM7_24V;
+        nvram.nvram7 &= ~ NVRAM7_24V;
         digitalWrite(_24V_OUT, LOW);
       } else {
-        nvram.data[NVRAM7] |= NVRAM7_24V;
+        nvram.nvram7 |= NVRAM7_24V;
         digitalWrite(_24V_OUT, HIGH);
       }
       _24v_out = t;
@@ -461,7 +461,7 @@ void httpd_listen() {
     if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
       return httpd.requestAuthentication();
     nvram.data[PROC] = 0;
-    nvram.data[NVRAM7] += NVRAM7_UPDATE;
+    nvram.nvram7 += NVRAM7_UPDATE;
     save_nvram();
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {

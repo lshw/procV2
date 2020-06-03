@@ -157,9 +157,9 @@ void update_progress(int cur, int total) {
 bool http_update()
 {
   disp("H UP. ");
-  if(nvram.data[NVRAM7] & NVRAM7_UPDATE) {
+  if(nvram.nvram7 & NVRAM7_UPDATE) {
     nvram.data[PROC] = 0;
-    nvram.data[NVRAM7] |= NVRAM7_UPDATE;
+    nvram.nvram7 |= NVRAM7_UPDATE;
     send_ram();
   }
   String update_url = "http://www.anheng.com.cn/proc_wifi.bin";

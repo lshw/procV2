@@ -16,7 +16,7 @@ String hostname = HOSTNAME;
 void setup()
 {
   load_nvram();
-  if (nvram.data[NVRAM7] & NVRAM7_24V) //lcd_ram[7] bit3是24V输出状态
+  if (nvram.nvram7 & NVRAM7_24V) //lcd_ram[7] bit3是24V输出状态
     _24v_out = HIGH;
   else
     _24v_out = LOW;
@@ -28,9 +28,12 @@ void setup()
   digitalWrite(PC_POWER, LOW);
   ht16c21_setup();
   ht16c21_cmd(0x88, 1); //闪烁
-  if (nvram.data[NVRAM7] & NVRAM7_UPDATE) {
+
+  get_comset();
+  Serial.begin(rate, comsets[comset]);
+  if (nvram.nvram7 & NVRAM7_UPDATE) {
     disp("-" VER "-");
-    nvram.data[NVRAM7] &= ~ NVRAM7_UPDATE;
+    nvram.nvram7 &= ~ NVRAM7_UPDATE;
     save_nvram();
     delay(1000);
   }
