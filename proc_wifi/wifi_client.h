@@ -6,18 +6,13 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266httpUpdate.h>
-extern char ram_buf[10];
-extern uint8_t rxBuf[256];
 void AP();
 bool http_update();
-void send_ram();
-void set_ram_check();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 ESP8266WiFiMulti WiFiMulti;
 HTTPClient http;
 String ssid, passwd, bssidstr;
 uint8_t bssid[7];
-uint32_t channel = 0;
 uint8_t hex2ch(char dat) {
   dat |= 0x20; //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
@@ -135,15 +130,12 @@ uint16_t http_get(uint8_t no) {
       }
     } else {
 
-      //ram_buf[9] |= 0x10; //x1
-      //send_ram();
       if (httpCode > 0)
         sprintf(disp_buf, ".E %03d", httpCode);
       disp(disp_buf);
       break;
     }
   }
-  //  http.end();
   url0 = "";
   return httpCode;
 }
@@ -161,7 +153,6 @@ bool http_update()
     nvram.proc = 0;
     nvram.nvram7 |= NVRAM7_UPDATE;
     nvram.change = 1;
-    send_ram();
   }
   String update_url = "http://www.anheng.com.cn/proc_wifi.bin";
   ESPhttpUpdate.onProgress(update_progress);

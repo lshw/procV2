@@ -92,7 +92,6 @@ SerialConfig comsets[] {
 char zmd_disp[ZMD_BUF_SIZE];
 uint8_t zmd_offset = 0, zmd_size = 0;
 uint16_t http_get(uint8_t);
-void send_ram();
 void test();
 uint8_t test_t = 0;
 float get_batt();

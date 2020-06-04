@@ -7,9 +7,7 @@
 #include "proc.h"
 #include "nvram.h"
 extern void disp(char *);
-extern char ram_buf[10];
 extern String hostname;
-void send_ram();
 float get_batt();
 void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
