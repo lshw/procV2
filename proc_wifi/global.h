@@ -120,7 +120,7 @@ void update_disp() {
   if (zmdsize != strlen(zmd_disp)) zmd_offset = 0; //长度有变化， 就从头开始显示
 }
 void timer1s() {
-  char disp_buf[20];
+  char mdays;
   if (timer3 > 0) {
     if (timer3 == 1) {
       if (nvram.proc != 0) {
@@ -144,21 +144,21 @@ void timer1s() {
         hour = 0;
         day++;
         if (day >= 28) {
-          disp_buf[0] = 31;
+          mdays = 31;
           switch (month) {
             case 4:
             case 6:
             case 9:
             case 11:
-              disp_buf[0] = 30;
+              mdays = 30;
               break;
             case 2:
-              if (year % 4 != 0) disp_buf[0] = 28;
-              else if (year % 100 == 0 && year % 400 != 0) disp_buf[0] = 28;
-              else disp_buf[0] = 29;
+              if (year % 4 != 0) mdays = 28;
+              else if (year % 100 == 0 && year % 400 != 0) mdays = 28;
+              else mdays = 29;
               break;
           }
-          if (day > disp_buf[0]) {
+          if (day > mdays) {
             month++;
             day = 1;
             if (month > 12) {
@@ -381,7 +381,7 @@ void zmd() {  //1s 一次Ticker
     zmd_offset = (zmd_offset + 1) % zmd_size;
   }
 
-  memset(disp_buf, ' ', sizeof(disp_buf));
+  memset(disp_buf, 0, sizeof(disp_buf));
   for (i = 0; i < sizeof(disp_buf); i++) {
     disp_buf[i] = zmd_disp[(zmd_offset + i) % zmd_size];
     if (disp_buf[i] != '.') i0++;
