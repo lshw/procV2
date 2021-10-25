@@ -86,6 +86,7 @@ bool wifi_connected_is_ok() {
 
 uint16_t http_get(uint8_t no) {
   char key[17];
+  WiFiClient client;
   if (no > 1) no = 1;
   String url0 = get_url(no);
   if (url0.indexOf('?') > 0)
@@ -97,7 +98,7 @@ uint16_t http_get(uint8_t no) {
 #endif
   url0 += "ver="  VER VERA "&sn=" + hostname ;
 
-  http.begin( url0 ); //HTTP提交
+  http.begin(client, url0 ); //HTTP提交
   http.setTimeout(4000);
   int httpCode;
   for (uint8_t i = 0; i < 10; i++) {
@@ -153,9 +154,10 @@ bool http_update()
     nvram.nvram7 |= NVRAM7_UPDATE;
     nvram.change = 1;
   }
+  WiFiClient client;
   String update_url = "http://www.anheng.com.cn/proc_wifi.bin";
   ESPhttpUpdate.onProgress(update_progress);
-  t_httpUpdate_return  ret = ESPhttpUpdate.update(update_url);
+  t_httpUpdate_return  ret = ESPhttpUpdate.update(client, update_url);
   update_url = "";
 
   switch (ret) {
