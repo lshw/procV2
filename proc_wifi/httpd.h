@@ -266,10 +266,12 @@ void set_php() {
              "网关:<input name=gateway size=8 value='" + gateway.toString() + "'>"
              "dns:<input name=dns size=8 value='" + dns.toString() + "'><br>"
              "ntp:<input name=ntp size=20 value=" + ntpServerName[0] + "><br>"
-             "<hr>可以设置自己的升级服务器地址(清空恢复原始设置)<br>"
+#ifdef HAVE_AUTO_UPDATE
+             "<hr>可以设置自己的自动升级服务器地址(清空恢复原始设置)<br>"
              "url0:<input maxlength=100  size=50 type=text value='" + get_url(0) + "' name=url><br>"
              "url1:<input maxlength=100  size=50 type=text value='" + get_url(1) + "' name=url1><br>"
              "间隔时间:<input maxlength=3  size=3 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
+#endif
              + update_auth +
              "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
              "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
@@ -392,6 +394,7 @@ void save_php() {
         fp.println(data);
         fp.close();
       }
+#ifdef HAVE_AUTO_UPDATE
     } else if (httpd.argName(i).compareTo("url") == 0) {
       url = httpd.arg(i);
       url.trim();
@@ -412,6 +415,7 @@ void save_php() {
         fp.println(url);
         fp.close();
       }
+#endif //HAVE_AUTO_UPDATE
     } else if (httpd.argName(i).compareTo("update_time") == 0) {
       update_time = httpd.arg(i).toInt();
       if (update_time == 0) {

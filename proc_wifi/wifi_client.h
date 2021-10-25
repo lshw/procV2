@@ -83,7 +83,7 @@ bool wifi_connected_is_ok() {
   ht16c21_cmd(0x88, 0); //开始闪烁
   return false;
 }
-
+#ifdef HAVE_AUTO_UPDATE
 uint16_t http_get(uint8_t no) {
   char key[17];
   WiFiClient client;
@@ -176,4 +176,5 @@ bool http_update()
   delay(1000);
   return false;
 }
+#endif //HAVE_AUTO_UPDATE
 #endif __WIFI_CLIENT_H__

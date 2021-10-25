@@ -1,5 +1,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
+//#define HAVE_AUTO_UPDATE
+
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include "config.h"
@@ -174,6 +176,7 @@ void timer1s() {
   }
   run_zmd = true;
 }
+#ifdef HAVE_AUTO_UPDATE
 void wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
@@ -182,6 +185,7 @@ void wget() {
     httpCode = http_get(nvram.nvram7 & NVRAM7_URL); //再试试另一个的url
   }
 }
+#endif
 void test() {
   if (test_t > 22)  {
     pinMode(PWM, OUTPUT);
@@ -232,7 +236,7 @@ float get_batt() {//电压
   v = (float) dat / 8 * (1000.0 + 100.0) / 100.0 / 1023 ;
   return v;
 }
-
+#ifdef HAVE_AUTO_UPDATE
 String get_url(uint8_t no) {
   File fp;
   char fn[20];
@@ -251,6 +255,7 @@ String get_url(uint8_t no) {
   }
   return ret;
 }
+#endif
 String get_ssid() {
   File fp;
   String ssid = "test:cfido.com";

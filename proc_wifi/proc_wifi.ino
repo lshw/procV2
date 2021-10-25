@@ -94,7 +94,9 @@ void loop()
       if (wifi_connected_is_ok()) {
         if (!httpd_up) {
           ntpclient();
+#ifdef HAVE_AUTO_UPDATE
           wget();
+#endif
           update_disp();
           zmd();
           httpd_up = true;
@@ -109,7 +111,9 @@ void loop()
         if (!httpd_up) {
           update_disp();
           ntpclient();
+#ifdef HAVE_AUTO_UPDATE
           wget();
+#endif
           httpd_up = true;
           httpd_listen();
         }
@@ -127,8 +131,10 @@ void loop()
     else
       update_timeok = -1; //停止;
     yield();
+#ifdef HAVE_AUTO_UPDATE
     wget();
     yield();
+#endif
   }
   if (nvram.change != 0) save_nvram();
   if (set_change) set_save();
