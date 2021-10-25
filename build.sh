@@ -10,9 +10,9 @@ date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
 ver=$date-${a:0:7}
 echo $ver
 export COMMIT=$ver
-#echo "#define GIT_COMMIT_ID \"$ver\"" > proc_wifi/commit.h
+CXXFLAGS=" -DGIT_COMMIT_ID=\"$ver\" "
 
-arduino=/opt/arduino-1.8.12
+arduino=/opt/arduino-1.8.13
 arduinoset=~/.arduino15
 sketchbook=~/sketchbook
 mkdir -p /tmp/build_proc_wifi /tmp/cache_proc_wifi
@@ -25,12 +25,13 @@ $arduino/arduino-builder -dump-prefs -logger=machine \
 -tools $arduinoset/packages \
 -built-in-libraries $arduino/libraries \
 -libraries $sketchbook/libraries \
--fqbn=esp8266com:esp8266:espduino:ResetMethod=v2,xtal=80,vt=flash,exception=legacy,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200 \
+-fqbn=esp8266com:esp8266:espduino:ResetMethod=v2,xtal=160,vt=flash,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200 \
 -ide-version=10812 \
 -build-path /tmp/build_proc_wifi \
 -warnings=none \
 -build-cache /tmp/cache_proc_wifi \
 -prefs=build.warn_data_percentage=75 \
+-prefs build.extra_flags="$CXXFLAGS" \
 -verbose \
 ./proc_wifi/proc_wifi.ino
 
@@ -44,12 +45,13 @@ $arduino/arduino-builder \
 -tools $arduinoset/packages \
 -built-in-libraries $arduino/libraries \
 -libraries $sketchbook/libraries \
--fqbn=esp8266com:esp8266:espduino:ResetMethod=v2,xtal=80,vt=flash,exception=legacy,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200 \
+-fqbn=esp8266com:esp8266:espduino:ResetMethod=v2,xtal=80,vt=flash,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200 \
 -ide-version=10812 \
 -build-path /tmp/build_proc_wifi \
 -warnings=none \
 -build-cache /tmp/cache_proc_wifi \
 -prefs=build.warn_data_percentage=75 \
+-prefs build.extra_flags="$CXXFLAGS" \
 -verbose \
 ./proc_wifi/proc_wifi.ino \
 > /tmp/info_proc_wifi.log

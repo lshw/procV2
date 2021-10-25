@@ -77,7 +77,7 @@ void update_head_footer() {
     "</head>"
     "<body>"
     "SN:<mark>" + hostname + "</mark> &nbsp; "
-    "版本:<mark>" VER "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
+    "版本:<mark>" VER "-" GIT_COMMIT_ID "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
