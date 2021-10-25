@@ -15,6 +15,8 @@ ESP8266WebServer httpd(80);
 String head, footer;
 String mylink;
 void update_head_footer() {
+  char ymd[12];
+  snprintf(ymd, sizeof(ymd), "%04d-%02d-%02d", __YEAR__, __MONTH__, __DAY__);
   head =
     "<html>"
     "<head>"
@@ -101,7 +103,7 @@ void update_head_footer() {
   footer =
     "<hr><table width=100%><tr>"
     "<td align=left>" + mylink + "</td>"
-    "<td><td align=right valign=bottom>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table></body></html>";
+    "<td><td align=right valign=bottom>程序编译时间: <mark>" + String(ymd) + " " __TIME__ "</mark></td></tr></table></body></html>";
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
