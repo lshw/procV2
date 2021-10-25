@@ -199,6 +199,7 @@ void switch_php() {
         digitalWrite(_24V_OUT, HIGH);
       }
       _24v_out = t;
+      save_nvram();
       update_head_footer();
       yield();
     }
