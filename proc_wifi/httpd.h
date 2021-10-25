@@ -291,7 +291,7 @@ void set_php() {
              "<select name=comset><option value='" + comset + "'>" + comset_str[comset] + "</option>"
              + comset_option +
              "</select>"
-             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='" + String(day_cron) + "'>"
+             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='" + String(day_cron) + "'>清空关闭"
              "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
              "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<hr><input type=submit name=submit value=保存>"
@@ -493,14 +493,21 @@ void save_php() {
       fp.print((char *)www_password);
       fp.close();
     } else if (httpd.argName(i).compareTo("day_cron") == 0) {
-      strncpy(day_cron, data.c_str(), sizeof(day_cron));
-      if (day_cron_hour != atoi(day_cron) || day_cron_minute != atoi(&day_cron[3])) {
-        day_cron_hour = atoi(day_cron);
-        day_cron_delay = 0;
-        day_cron_minute = atoi(&day_cron[3]);
-        fp = SPIFFS.open("/day_cron", "w");
-        fp.print(data);
-        fp.close();
+      if(data.length() < 5) {
+        SPIFFS.remove("/day_cron");
+        day_cron_hour = -1;
+        day_cron_minute = -1;
+        memset(day_cron, 0, sizeof(day_cron));
+      }else {
+        strncpy(day_cron, data.c_str(), sizeof(day_cron));
+        if (day_cron_hour != atoi(day_cron) || day_cron_minute != atoi(&day_cron[3])) {
+          day_cron_hour = atoi(day_cron);
+          day_cron_delay = 0;
+          day_cron_minute = atoi(&day_cron[3]);
+          fp = SPIFFS.open("/day_cron", "w");
+          fp.print(data);
+          fp.close();
+        }
       }
     }
   }
