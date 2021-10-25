@@ -1,6 +1,5 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
-//#define HAVE_AUTO_UPDATE
 
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
