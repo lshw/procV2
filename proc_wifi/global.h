@@ -19,6 +19,9 @@ char www_username[100] = "root";
 char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
 extern String mylink;
+extern char day_cron[6];
+extern int8_t day_cron_hour, day_cron_minute;
+extern uint32_t day_cron_delay; //每天执行完day_cron_delay后， 要延迟一下
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
 //0,1-正常 2-OTA
 #define OTA_MODE 2
@@ -349,6 +352,22 @@ void get_mylink() {
     }
   }
   if (mylink == "") mylink = "在线文档:\r<a href=https://www.bjlx.org.cn/node/929>https://www.bjlx.org.cn/node/929</a>";
+}
+
+void get_day_cron() {
+  File fp;
+  if (!SPIFFS.begin()) return;
+  fp = SPIFFS.open("/day_cron", "r");
+  if (fp) {
+    strncpy(day_cron, fp_gets(fp).c_str(), sizeof(day_cron)); //hh:mm
+    day_cron_hour = atoi(day_cron);
+    day_cron_minute = atoi(&day_cron[3]);
+    fp.close();
+  } else {
+    day_cron_hour = -1;
+    day_cron_minute = -1;
+  }
+  return;
 }
 
 void AP() {

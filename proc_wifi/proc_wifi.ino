@@ -44,6 +44,7 @@ void setup()
   WiFi.hostname(hostname);
   get_network();
   get_batt();
+  get_day_cron();
   proc = nvram.proc;
   wifi_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
@@ -86,6 +87,7 @@ void setup()
 }
 
 bool httpd_up = false;
+uint32_t day_cron_delay = 0; //每天执行完day_cron_delay后， 要延迟一下
 void loop()
 {
   switch (proc) {
@@ -139,4 +141,16 @@ void loop()
   if (nvram.change != 0) save_nvram();
   if (set_change) set_save();
   system_soft_wdt_feed();
+  if (day_cron_delay < millis()) {
+    if (hour == day_cron_hour && minute == day_cron_minute) {
+      day_cron_delay = millis() + 36000000 ; //10小时
+      disp("11111");
+      digitalWrite(PC_POWER, HIGH);
+      pcPowerTicker.detach();
+      pcPowerTicker.attach_ms(300, pcPowerUp);
+      yield();
+    }
+  }
+  if (millis() > 0xf0000000)
+    ESP.restart();  //防止millis() 溢出
 }

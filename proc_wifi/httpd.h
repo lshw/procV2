@@ -14,6 +14,8 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 ESP8266WebServer httpd(80);
 String head, footer;
 String mylink;
+char day_cron[6];
+int8_t day_cron_hour = -1, day_cron_minute = -1;
 void update_head_footer() {
   char ymd[12];
   snprintf(ymd, sizeof(ymd), "%04d-%02d-%02d", __YEAR__, __MONTH__, __DAY__);
@@ -153,6 +155,7 @@ void telnet_client_php() {
 void switch_php() {
   String pin;
   uint16_t t;
+  File fp;
   yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
@@ -273,8 +276,6 @@ void set_php() {
              "间隔时间:<input maxlength=3  size=3 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
 #endif
              + update_auth +
-             "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
-             "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<hr>串口设置:<select name=rate><option value=" + rate + ">" + rate + "</option>"
              "<option value='460800'>460800</option>"
              "<option value='230400'>230400</option>"
@@ -286,9 +287,12 @@ void set_php() {
              "<option value='4800'>4800</option>"
              "<option value='2400'>2400</option>"
              "<option value='1200'>1200</option></select>"
-             "<select name=comset><option value=" + comset + ">" + comset_str[comset] + "</option>"
+             "<select name=comset><option value='" + comset + "'>" + comset_str[comset] + "</option>"
              + comset_option +
              "</select>"
+             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='" + String(day_cron) + "'>"
+             "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
+             "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<hr><input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
@@ -383,12 +387,12 @@ void save_php() {
     return httpd.requestAuthentication();
   SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
+    data = httpd.arg(i);
+    data.trim();
+    data.replace("\xef\xbc\x9a", ":"); //utf8 :
+    data.replace("\xa3\xba", ":"); //gbk :
+    data.replace("\xa1\x47", ":"); //big5 :
     if (httpd.argName(i).compareTo("data") == 0) {
-      data = httpd.arg(i);
-      data.trim();
-      data.replace("\xef\xbc\x9a", ":"); //utf8 :
-      data.replace("\xa3\xba", ":"); //gbk :
-      data.replace("\xa1\x47", ":"); //big5 :
       if (data.length() > 8) {
         fp = SPIFFS.open("/ssid.txt", "w");
         fp.println(data);
@@ -396,8 +400,7 @@ void save_php() {
       }
 #ifdef HAVE_AUTO_UPDATE
     } else if (httpd.argName(i).compareTo("url") == 0) {
-      url = httpd.arg(i);
-      url.trim();
+      url = data;
       if (url.length() == 0) {
         SPIFFS.remove("/url.txt");
       } else {
@@ -406,8 +409,7 @@ void save_php() {
         fp.close();
       }
     } else if (httpd.argName(i).compareTo("url1") == 0) {
-      url = httpd.arg(i);
-      url.trim();
+      url = data;
       if (url.length() == 0) {
         SPIFFS.remove("/url1.txt");
       } else {
@@ -417,7 +419,7 @@ void save_php() {
       }
 #endif //HAVE_AUTO_UPDATE
     } else if (httpd.argName(i).compareTo("update_time") == 0) {
-      update_time = httpd.arg(i).toInt();
+      update_time = data.toInt();
       if (update_time == 0) {
         update_timeok = -1;
       } else {
@@ -428,7 +430,7 @@ void save_php() {
       fp.close();
     } else if (httpd.argName(i).compareTo("mylink") == 0) {
       if (mylink != httpd.arg(i)) {
-        mylink = httpd.arg(i);
+        mylink = data;
         fp = SPIFFS.open("/mylink.txt", "w");
         fp.println(mylink);
         fp.close();
@@ -443,52 +445,62 @@ void save_php() {
         is_dhcp = false;
       }
     } else if (httpd.argName(i).compareTo("local_ip") == 0) {
-      if (local_ip.toString() != httpd.arg(i)) {
+      if (local_ip.toString() != data) {
         set_change |= NET_CHANGE;
-        local_ip.fromString(httpd.arg(i));
+        local_ip.fromString(data);
       }
     } else if (httpd.argName(i).compareTo("netmask") == 0) {
-      if (netmask.toString() != httpd.arg(i)) {
+      if (netmask.toString() != data) {
         set_change |= NET_CHANGE;
-        netmask.fromString(httpd.arg(i));
+        netmask.fromString(data);
       }
     } else if (httpd.argName(i).compareTo("gateway") == 0) {
-      if (gateway.toString() != httpd.arg(i)) {
+      if (gateway.toString() != data) {
         set_change |= NET_CHANGE;
-        gateway.fromString(httpd.arg(i));
+        gateway.fromString(data);
       }
     } else if (httpd.argName(i).compareTo("dns") == 0) {
-      if (dns.toString() != httpd.arg(i)) {
+      if (dns.toString() != data) {
         set_change |= NET_CHANGE;
-        dns.fromString(httpd.arg(i));
+        dns.fromString(data);
       }
     } else if (httpd.argName(i).compareTo("ntp") == 0) {
-      if (ntpServerName[0] != httpd.arg(i)) {
+      if (ntpServerName[0] != data) {
         set_change |= NET_CHANGE;
-        ntpServerName[0] = httpd.arg(i);
+        ntpServerName[0] = data;
       }
     } else if (httpd.argName(i).compareTo("rate") == 0) {
-      if (rate != httpd.arg(i).toInt()) {
+      if (rate != data.toInt()) {
         set_change |= COM_CHANGE;
-        rate = httpd.arg(i).toInt();
+        rate = data.toInt();
       }
     } else if (httpd.argName(i).compareTo("comset") == 0) {
-      if (comset != httpd.arg(i).toInt()) {
+      if (comset != data.toInt()) {
         set_change |= COM_CHANGE;
-        comset = httpd.arg(i).toInt();
+        comset = data.toInt();
       }
     } else if (httpd.argName(i).compareTo("username") == 0) {
-      strncpy(www_username, httpd.arg(i).c_str(), sizeof(www_username));
+      strncpy(www_username, data.c_str(), sizeof(www_username));
       fp = SPIFFS.open("/http_auth.txt", "w");
       fp.println((char *)www_username);
       fp.print((char *)www_password);
       fp.close();
     } else if (httpd.argName(i).compareTo("password") == 0) {
-      strncpy(www_password, httpd.arg(i).c_str(), sizeof(www_password));
+      strncpy(www_password, data.c_str(), sizeof(www_password));
       fp = SPIFFS.open("/http_auth.txt", "w");
       fp.println((char *)www_username);
       fp.print((char *)www_password);
       fp.close();
+    } else if (httpd.argName(i).compareTo("day_cron") == 0) {
+      strncpy(day_cron, data.c_str(), sizeof(day_cron));
+      if (day_cron_hour != atoi(day_cron) || day_cron_minute != atoi(&day_cron[3])) {
+        day_cron_hour = atoi(day_cron);
+        day_cron_delay = 0;
+        day_cron_minute = atoi(&day_cron[3]);
+        fp = SPIFFS.open("/day_cron", "w");
+        fp.print(data);
+        fp.close();
+      }
     }
   }
   url = "";
