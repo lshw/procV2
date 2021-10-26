@@ -154,7 +154,7 @@ void loop()
   if (set_change) set_save();
   system_soft_wdt_feed();
   if (day_cron_delay < millis()) {
-    if (hour == day_cron_hour && minute == day_cron_minute) {
+    if ((hour == day_cron_hour || day_cron_hour >= 60) && minute == day_cron_minute) {
       day_cron_delay = millis() + 36000000 ; //10小时
       ping_powerup();
     }

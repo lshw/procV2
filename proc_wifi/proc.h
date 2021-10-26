@@ -42,7 +42,7 @@ void proc_loop() {
   for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
     if (client_enable[i] && tcpClients[i].availableForWrite()) { //tcp可以写
       if (client_enable[i] == 2) {
-        tcpClients[i].println("--ok! enabled. #" + String(i)+"--");
+        tcpClients[i].println("--ok! enabled. #" + String(i + 1)+"--");
         client_enable[i] = 1;
       }
       while (tcpClients[i].available() && Serial.availableForWrite() > 0) { //tcp可以读， 串口可以写
