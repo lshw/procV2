@@ -40,26 +40,25 @@ void proc_loop() {
   }
   yield();
   for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
-    if (client_enable[i] && tcpClients[i].available()) {
+    if (client_enable[i] && tcpClients[i].availableForWrite()) { //tcp可以写
       if (client_enable[i] == 2) {
-        tcpClients[i].println("ok! enabled.");
+        tcpClients[i].println("--ok! enabled. #" + String(i)+"--");
         client_enable[i] = 1;
       }
-      while (tcpClients[i].available() && Serial.availableForWrite() > 0) {
+      while (tcpClients[i].available() && Serial.availableForWrite() > 0) { //tcp可以读， 串口可以写
         sbuf[0] = tcpClients[i].read();
         Serial.write(sbuf[0]);
         for (int i1 = 0; i1 < MAX_SRV_CLIENTS; i1++)
-          if (i1 != i && tcpClients[i1]) tcpClients[i1].write(sbuf[0]);
+          if (i1 != i && tcpClients[i] == 1) tcpClients[i1].write(sbuf[0]);
         client_read[i]++;
       }
     }
   }
-
   yield();
   size_t len = Serial.available();
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) {
-      size_t afw = tcpClients[i].availableForWrite();
+      size_t afw = tcpClients[i].availableForWrite(); //tcp可以写
       if (len > afw ) len = afw;
     }
   if (len > SBUF_SIZE ) len = SBUF_SIZE;
@@ -70,5 +69,10 @@ void proc_loop() {
         size_t tcp_sent = tcpClients[i].write(sbuf, serial_got);
       }
   }
+}
+void net_log(String msg) {
+    for (int i = 0; i < MAX_SRV_CLIENTS; i++)
+      if (client_enable[i] && tcpClients[i].availableForWrite())
+          tcpClients[i].println("--"+msg+"--");
 }
 #endif //__PROC_H__
