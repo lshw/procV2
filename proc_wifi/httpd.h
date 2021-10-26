@@ -292,6 +292,7 @@ void set_php() {
              + comset_option +
              "</select>"
              "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='" + String(day_cron) + "'>清空关闭"
+             "<hr>主机ip:<input type=text name=master_ip size=20 value='" + master_ip.toString() + "'>"
              "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
              "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
              "<hr><input type=submit name=submit value=保存>"
@@ -486,6 +487,12 @@ void save_php() {
       fp.println((char *)www_username);
       fp.print((char *)www_password);
       fp.close();
+    } else if (httpd.argName(i).compareTo("master_ip") == 0) {
+      if(data.length() < 5) data="0.0.0.0"; //空为关闭
+      if (master_ip.toString() != data) {
+        set_change |= OTHER_CHANGE;
+        master_ip.fromString(data);
+      }
     } else if (httpd.argName(i).compareTo("password") == 0) {
       strncpy(www_password, data.c_str(), sizeof(www_password));
       fp = SPIFFS.open("/http_auth.txt", "w");

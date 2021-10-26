@@ -33,6 +33,7 @@ String ntpServerName[5] = {
   "2.debian.pool.ntp.org",
 };
 bool is_dhcp = true;
+IPAddress master_ip = {0, 0, 0, 0};
 IPAddress local_ip = {192, 168, 1, 2};
 IPAddress netmask = {255, 255, 255, 0};
 IPAddress gateway = {192, 168, 1, 1};
@@ -309,6 +310,15 @@ void get_comset() {
   }
   Serial.begin(rate, comsets[comset]);
 }
+void get_otherset() {
+  File fp;
+  if (!SPIFFS.begin()) return;
+  fp = SPIFFS.open("/other.txt", "r");
+  if (fp) {
+    master_ip.fromString(fp_gets(fp));
+    fp.close();
+  }
+}
 
 void get_network() {
   File fp;
@@ -422,6 +432,7 @@ void zmd() {  //1s 一次Ticker
 uint8_t set_change = 0;
 #define COM_CHANGE 1
 #define NET_CHANGE 2
+#define OTHER_CHANGE 4
 void set_save() {
   File fp;
   if (!SPIFFS.begin()) return;
@@ -443,8 +454,12 @@ void set_save() {
     fp.println(dns);
     fp.println(ntpServerName[0]);
     fp.close();
-    if (!is_dhcp)
-      WiFi.config(local_ip, dns, gateway, netmask);
+    ESP.restart();
+  }
+  if (set_change & OTHER_CHANGE) {
+    fp = SPIFFS.open("/other.txt", "w");
+    fp.println(master_ip);
+    fp.close();
   }
   set_change = 0;
 }

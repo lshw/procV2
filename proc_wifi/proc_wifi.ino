@@ -13,6 +13,9 @@ String hostname = HOSTNAME;
 #include "httpd.h"
 #include "ht16c21.h"
 #include "proc.h"
+#include <Pinger.h>
+Pinger pinger;
+int8_t ping_status = 0;
 void setup()
 {
   load_nvram();
@@ -32,6 +35,7 @@ void setup()
   ht16c21_cmd(0x88, 1); //闪烁
 
   get_comset();
+  get_otherset();
   Serial.begin(rate, comsets[comset]);
   if (nvram.nvram7 & NVRAM7_UPDATE) {
     disp("-" VER "-");
@@ -84,6 +88,14 @@ void setup()
     yield();
   }
   get_mylink(); //定制的web左下角
+  pinger.OnEnd([](const PingerResponse & response) {
+    if (response.TotalSentRequests == response.TotalReceivedResponses)
+      ping_status = 1;
+    else
+      ping_status = -1;
+    return true;
+  });
+
 }
 
 bool httpd_up = false;
@@ -144,13 +156,29 @@ void loop()
   if (day_cron_delay < millis()) {
     if (hour == day_cron_hour && minute == day_cron_minute) {
       day_cron_delay = millis() + 36000000 ; //10小时
+      ping_powerup();
+    }
+  }
+  if (millis() > 0xf0000000)
+    ESP.restart();  //防止millis() 溢出
+}
+void ping_powerup() {
+  uint32_t ms0;
+  ping_status = 0;
+  if (master_ip.toString() != String("0.0.0.0") && pinger.Ping(master_ip)) {
+    ms0=millis()+30000; //等待30秒 ping回应
+    while (ms0>millis()) {
+      if (ping_status != 0) break;
+      yield();
+    }
+    if (ping_status == -1) {
+      net_log("ping " + master_ip.toString() + " fail, power up!");
       disp("11111");
       digitalWrite(PC_POWER, HIGH);
       pcPowerTicker.detach();
       pcPowerTicker.attach_ms(300, pcPowerUp);
       yield();
-    }
+    } else
+      net_log("ping " + master_ip.toString() + " ok, skip power up!");
   }
-  if (millis() > 0xf0000000)
-    ESP.restart();  //防止millis() 溢出
 }
