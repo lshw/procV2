@@ -23,6 +23,8 @@ void wifi_setup() {
   char buf[3];
   char ch;
   boolean is_ssid = true;
+  WiFi.setAutoConnect(true);//自动链接上次
+  WiFi.setAutoReconnect(true);//断线自动重连
   if (proc == OTA_MODE) { //ota时要 ap 和 client
     WiFi.mode(WIFI_AP_STA);
     AP();
