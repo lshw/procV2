@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VER "1.65"
+#define VER "1.66"
 #define VERA ""
 #define CRC_MAGIC 4
 //#define HAVE_AUTO_UPDATE

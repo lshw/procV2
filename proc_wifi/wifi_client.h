@@ -157,7 +157,7 @@ bool http_update()
     nvram.change = 1;
   }
   WiFiClient client;
-  String update_url = "http://www.anheng.com.cn/proc_wifi.bin";
+  String update_url = "http://www.anheng.com.cn/firmware.php?type=procV2&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER; //php可以在header里下发X-MD5作为校验
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return  ret = ESPhttpUpdate.update(client, update_url);
   update_url = "";
