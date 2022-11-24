@@ -23,6 +23,17 @@ void setup()
     _24v_out = HIGH;
   else
     _24v_out = LOW;
+  wifi_country_t mycountry =
+  {
+    .cc = "CN",
+    .schan = 1,
+    .nchan = 13,
+    .policy = WIFI_COUNTRY_POLICY_MANUAL,
+  };
+
+  wifi_set_country(&mycountry);
+  wifi_station_connect();
+
   analogWriteFreq(400);
   analogWrite(PWM, nvram.pwm);
   pinMode(_24V_OUT, OUTPUT);
@@ -60,7 +71,6 @@ void setup()
         nvram.change = 1;
       }
       disp(" OTA ");
-      //      ota_test.attach(0.5, test);
       ota_setup();
       httpd_listen();
       break;

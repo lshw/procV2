@@ -3,6 +3,8 @@
 
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
+#include "CRC32.h"
+CRC32 crc;
 #include "config.h"
 #include "nvram.h"
 #include "ht16c21.h"

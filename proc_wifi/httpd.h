@@ -14,8 +14,32 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 ESP8266WebServer httpd(80);
 String head, footer;
 String mylink;
+String body;
 char day_cron[6];
 int8_t day_cron_hour = -1, day_cron_minute = -1;
+
+void httpd_send_200(String javascript) {
+  httpd.sendHeader( "charset", "utf-8" );
+  httpd.send(200, "text/html", "<html>"
+             "<head>"
+             "<title>" + hostname + " " + GIT_VER + "</title>"
+             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             "<script>"
+             "function modi(url,text,Defaulttext) {"
+             "var data=prompt(text,Defaulttext);"
+             "if (data==null) {return false;}"
+             "location.replace(url+data);"
+             "}"
+             + javascript +
+             "</script>"
+             "</head>"
+             "<body>"
+             + body +
+             "</body>"
+             "</html>");
+  httpd.client().stop();
+}
+
 void update_head_footer() {
   char ymd[12];
   snprintf(ymd, sizeof(ymd), "%04d-%02d-%02d", __YEAR__, __MONTH__, __DAY__);
@@ -81,7 +105,7 @@ void update_head_footer() {
     "</head>"
     "<body>"
     "SN:<mark>" + hostname + "</mark> &nbsp; "
-    "版本:<mark>" VER "-" GIT_COMMIT_ID "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
+    "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
@@ -557,7 +581,7 @@ void httpd_listen() {
                  "</body>"
                  "</html>"
                 );
-    } else {
+    } else if (crc.finalize() == CRC_MAGIC) {
       httpd.send(200, "text/html", "<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -570,6 +594,9 @@ void httpd_listen() {
       ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
       ESP.restart();
+    } else {
+      body = "升级失败 <a href=/><buttom>返回首页</buttom></a>";
+      httpd_send_200("");
     }
   }, []() {
     HTTPUpload& upload = httpd.upload();
@@ -577,12 +604,18 @@ void httpd_listen() {
       WiFiUDP::stopAll();
       uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
       Update.begin(maxSketchSpace); //start with max available size
+      crc.reset();
     } else if (upload.status == UPLOAD_FILE_WRITE) {
+      crc.update((uint8_t *)upload.buf, upload.currentSize);
       sprintf(disp_buf, "UP.%d", upload.totalSize / 1000);
       disp(disp_buf);
       Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
       yield();
+        if (crc.finalize() != CRC_MAGIC)
+          Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
+        else
+          Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
       Update.end(true);
     }
   });
