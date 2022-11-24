@@ -17,4 +17,12 @@
 #define DEFAULT_URL1 "http://temp2.wf163.com:808/proc_wifi.php"
 #endif
 
+float get_R18() { 
+switch(ESP.getChipId()) {
+case 0x9488f0:
+return 43.200;
+}
+return 100.000;
+}
+
 #endif //_CONFIG_H_

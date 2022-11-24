@@ -237,8 +237,8 @@ float get_batt() {//电压
         + analogRead(A0)
         + analogRead(A0)
         + analogRead(A0);
-
-  v = (float) dat / 8 * (1000.0 + 100.0) / 100.0 / 1023 ;
+  float r18 = get_R18();
+  v = (float) dat / 8 * (1000.0 + r18) / r18 / 1023 ;
   return v;
 }
 #ifdef HAVE_AUTO_UPDATE
