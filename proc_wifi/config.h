@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VER "1.66"
+#define VER "1.67"
 #define VERA ""
 #define CRC_MAGIC 4
 //#define HAVE_AUTO_UPDATE
@@ -19,7 +19,8 @@
 
 float get_R18() { 
 switch(ESP.getChipId()) {
-case 0x9488f0:
+case 0x9488F0:
+case 0x9463F5:
 return 43.200;
 }
 return 100.000;

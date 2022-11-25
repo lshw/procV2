@@ -66,14 +66,19 @@ void setup()
   switch (proc) {
     case OTA_MODE:
       wdt_disable();
-      if (nvram.proc != 0) {
-        nvram.proc = 0;//ota以后，
-        nvram.change = 1;
-      }
+      nvram.proc = SMART_CONFIG_MODE;//ota以后，
+      nvram.change = 1;
       disp(" OTA ");
       ota_setup();
       httpd_listen();
       break;
+    case SMART_CONFIG_MODE:
+      nvram.proc = 0;//ota以后，
+      nvram.change = 1;
+      disp("CO  ");
+      smart_config();
+      save_nvram();
+      ESP.restart();
     default:
       proc_setup();
       if (nvram.proc != OTA_MODE) {
@@ -114,6 +119,15 @@ void loop()
 {
   switch (proc) {
     case OTA_MODE:
+      if (WiFi.smartConfigDone()) {
+        wifi_set_clean();
+        wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
+        Serial.println(F("Smartconfig OK"));
+        disp("6.6.6.6.6.");
+        proc = 0;
+        ESP.restart();
+        return;
+      }
       httpd_loop();
       if (wifi_connected_is_ok()) {
         if (!httpd_up) {
@@ -142,6 +156,9 @@ void loop()
           httpd_listen();
         }
         httpd_loop();
+      } else if(millis() > 30000) { //30秒不能登陆网络进smart_config
+        smart_config();
+        ESP.restart();
       }
   }
   yield();//先看看其它任务， 有啥需要忙的
@@ -191,4 +208,29 @@ void ping_powerup() {
     } else
       net_log("ping " + master_ip.toString() + " ok, skip power up!");
   }
+}
+bool smart_config() {
+  //插上电， 等20秒， 如果没有上网成功， 就会进入 CO xx计数， 100秒之内完成下面的操作
+  //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
+  nvram.proc = 0;
+  nvram.change = 1;
+  if (wifi_connected_is_ok()) return true;
+  WiFi.mode(WIFI_STA);
+  WiFi.beginSmartConfig();
+  Serial.println("SmartConfig start");
+  for (uint8_t i = 0; i < 100; i++) {
+    if (WiFi.smartConfigDone()) {
+      wifi_set_clean();
+      wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
+      Serial.println("OK");
+      return true;
+    }
+    Serial.write('.');
+    delay(1000);
+    snprintf(disp_buf, sizeof(disp_buf), "CON%02d", i);
+    disp(disp_buf);
+  }
+  snprintf(disp_buf, sizeof(disp_buf), " %3.2f ", v);
+  disp(disp_buf);
+  return false;
 }

@@ -26,6 +26,7 @@ extern uint32_t day_cron_delay; //每天执行完day_cron_delay后， 要延迟�
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
 //0,1-正常 2-OTA
 #define OTA_MODE 2
+#define SMART_CONFIG_MODE 3
 uint8_t _24v_out;
 String ntpServerName[5] = {
   "",
@@ -466,6 +467,45 @@ void set_save() {
   set_change = 0;
 }
 
+void wifi_set_clean() {
+  if (SPIFFS.begin()) {
+    SPIFFS.remove("/ssid.txt");
+    SPIFFS.end();
+  }
+}
+void  wifi_set_add(const char * wps_ssid, const char * wps_password) {
+  File fp;
+  int8_t mh_offset;
+  String wifi_sets, line;
+  if (wps_ssid[0] == 0) return;
+  if (SPIFFS.begin()) {
+    fp = SPIFFS.open("/ssid.txt", "r");
+    wifi_sets = String(wps_ssid) + ":" + String(wps_password) + "\r\n";
+    if (fp) {
+      while (fp.available()) {
+        line = fp.readStringUntil('\n');
+        line.trim();
+        if (line == "")
+          continue;
+        if (line.length() > 110)
+          line = line.substring(0, 110);
+        mh_offset = line.indexOf(':');
+        if (mh_offset < 2) continue;
+        if (line.substring(0, mh_offset) == wps_ssid)
+          continue;
+        else
+          wifi_sets += line + "\r\n";
+      }
+      fp.close();
+    }
+    fp = SPIFFS.open("/ssid.txt", "w");
+    if (fp) {
+      fp.print(wifi_sets);
+      fp.close();
+    }
+    SPIFFS.end();
+  }
+}
 #define __YEAR__ ((((__DATE__[7]-'0')*10+(__DATE__[8]-'0'))*10 \
                    +(__DATE__[9]-'0'))*10+(__DATE__[10]-'0'))
 
