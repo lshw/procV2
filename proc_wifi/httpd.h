@@ -24,18 +24,73 @@ void httpd_send_200(String javascript) {
              "<head>"
              "<title>" + hostname + " " + GIT_VER + "</title>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             "<style type='text/css'>"
+             "hide {display:none;}"
+             "unhide {display:inline;}"
+             "</style>"
              "<script>"
              "function modi(url,text,Defaulttext) {"
              "var data=prompt(text,Defaulttext);"
              "if (data==null) {return false;}"
              "location.replace(url+data);"
              "}"
+             " pwm=" + String(nvram.pwm) + ";"
+             " function ajax_get(url) {"
+             " xhr = new XMLHttpRequest();"
+             " xhr.open('GET', url, true);"
+             " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
+             " xhr.send();"
+             " }"
+             " function set_val(id,val) {"
+             "document.getElementById(id).textContent=val;"
+             " }"
+             " function goto_if(url,msg) {"
+             " if(confirm(msg))"
+             " location.replace(url);"
+             " else return false;"
+             " return true;"
+             " }"
+             " function hide(id){"
+             " document.getElementById(id).style.display='none';"
+             " }"
+             " function unhide(id){"
+             " document.getElementById(id).style.display='inline';"
+             " }"
+             " function ajax_if(url, msg) {"
+             " if(confirm(msg))"
+             " ajax_get(url);"
+             " else return false;"
+             " return true;"
+             " }"
+             " function modi(url,text,defaultext) {"
+             " var data=prompt(text,defaultext);"
+             " if( data == defaultext)"
+             " return false;"
+             " location.replace(url+data);"
+             " return true;"
+             "}"
+             " function setpwm(val) {"
+             " if(val<1) val=1;"
+             " if(val>1019) val=1019;"
+             " pwm=val;"
+             " set_val('pwm','pwm:'+val);"
+             " ajax_get('/switch.php?b=PWM&t='+val);"
+             "}"
+             " function ajax_modi(url,text,defaultext) {"
+             " var data=prompt(text,defaultext);"
+             " if( data == defaultext)"
+             " return false;"
+             " ajax_get(url+data);"
+             " return true;"
+             "}"
              + javascript +
              "</script>"
              "</head>"
              "<body>"
-             + body +
-             "</body>"
+             + head
+             + body
+             + footer
+             + "</body>"
              "</html>");
   httpd.client().stop();
 }
@@ -44,66 +99,6 @@ void update_head_footer() {
   char ymd[12];
   snprintf(ymd, sizeof(ymd), "%04d-%02d-%02d", __YEAR__, __MONTH__, __DAY__);
   head =
-    "<html>"
-    "<head>"
-    "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-    "<style type='text/css'>"
-    "hide {display:none;}"
-    "unhide {display:inline;}"
-    "</style>"
-    "<script>"
-    " pwm=" + String(nvram.pwm) + ";"
-    " function ajax_get(url) {"
-    " xhr = new XMLHttpRequest();"
-    " xhr.open('GET', url, true);"
-    " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
-    " xhr.send();"
-    " }"
-    " function set_val(id,val) {"
-    "document.getElementById(id).textContent=val;"
-    " }"
-    " function goto_if(url,msg) {"
-    " if(confirm(msg))"
-    " location.replace(url);"
-    " else return false;"
-    " return true;"
-    " }"
-    " function hide(id){"
-    " document.getElementById(id).style.display='none';"
-    " }"
-    " function unhide(id){"
-    " document.getElementById(id).style.display='inline';"
-    " }"
-    " function ajax_if(url,msg) {"
-    " if(confirm(msg))"
-    " ajax_get(url);"
-    " else return false;"
-    " return true;"
-    " }"
-    " function modi(url,text,defaultext) {"
-    " var data=prompt(text,defaultext);"
-    " if( data == defaultext)"
-    " return false;"
-    " location.replace(url+data);"
-    " return true;"
-    "}"
-    " function setpwm(val) {"
-    " if(val<1) val=1;"
-    " if(val>1019) val=1019;"
-    " pwm=val;"
-    " set_val('pwm','pwm:'+val);"
-    " ajax_get('/switch.php?b=PWM&t='+val);"
-    "}"
-    " function ajax_modi(url,text,defaultext) {"
-    " var data=prompt(text,defaultext);"
-    " if( data == defaultext)"
-    " return false;"
-    " ajax_get(url+data);"
-    " return true;"
-    "}"
-    "</script>"
-    "</head>"
-    "<body>"
     "SN:<mark>" + hostname + "</mark> &nbsp; "
     "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
@@ -125,7 +120,6 @@ void update_head_footer() {
     head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已开启</button>";
   head +=   "<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>";
 
-
   footer =
     "<hr><table width=100%><tr>"
     "<td align=left>" + mylink + "</td>"
@@ -138,21 +132,18 @@ void handleRoot() {
   yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
-  if (proc != OTA_MODE) exit_button = "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
+  body = "<a href=/set.php><button>设置</button></a>";
+  if (proc != OTA_MODE) body += "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
+  telnets = "";
   for (uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
       telnets += "<tr align=center><td><input type=checkbox";
-      if (client_enable[i]) telnets += " checked";
+      if (client_enable[i]) body += " checked";
       telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String((millis() - client_ms[i]) / 1000) + "</td><td>" + String(client_read[i]) + "</td></tr>";
     }
-  if (telnets != "") telnets = "<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>" + telnets + "</table>";
+  if (telnets != "") body += "<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>" + telnets + "</table>";
 
-  httpd.send(200, "text/html",
-             head +
-             "<a href=/set.php><button>设置</button></a>"
-             + exit_button + telnets + footer
-            );
-  httpd.client().stop();
+  httpd_send_200("");
 }
 void telnet_client_php() {
   int8_t id = -1, checked = -1;
@@ -173,8 +164,7 @@ void telnet_client_php() {
       break;
     }
   }
-  httpd.send(200, "text/html", "");
-  httpd.client().stop();
+  httpd_send_200("");
 }
 void switch_php() {
   String pin;
@@ -279,10 +269,7 @@ void set_php() {
   String select_dhcp = "", select_ip = "";
   if (is_dhcp) select_dhcp = "checked";
   else select_ip = "checked";
-  httpd.send(200,
-             "text/html",
-             head +
-             "<a href=/><button>返回首页</button></a>"
+             body = "<a href=/><button>返回首页</button></a>"
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<form action=/save.php method=post>"
@@ -324,10 +311,8 @@ void set_php() {
              "<hr>"
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
              "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
-             "<input type='submit' value='上传'></form>"
-             + footer
-            );
-  httpd.client().stop();
+             "<input type='submit' value='上传'></form>";
+  httpd_send_200("");
   ap_on_time = millis() + 200000;
 }
 void handleNotFound() {
