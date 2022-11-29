@@ -363,6 +363,7 @@ void get_mylink() {
       fp.close();
     }
   }
+  mylink.trim();
   if (mylink == "") mylink = "在线文档:\r<a href=https://www.bjlx.org.cn/node/929>https://www.bjlx.org.cn/node/929</a>";
 }
 

@@ -18,7 +18,7 @@ arduinoset=~/.arduino15
 sketchbook=~/sketchbook
 mkdir -p /tmp/build_proc_wifi /tmp/cache_proc_wifi
 chown liushiwei /tmp/build_proc_wifi /tmp/cache_proc_wifi
-fqbn="esp8266:esp8266:espduino:ResetMethod=v2,xtal=160,vt=flash,ssl=all,mmu=4816,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800"
+fqbn="esp8266:esp8266:espduino:ResetMethod=v2,xtal=160,vt=flash,ssl=all,mmu=3232,eesz=4M3M,ip=hb2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800"
 $arduino/arduino-builder -dump-prefs -logger=machine \
 -hardware $arduino/hardware \
 -hardware $arduinoset/packages \
