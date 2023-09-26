@@ -33,7 +33,7 @@ void setup()
 
   wifi_set_country(&mycountry);
   wifi_station_connect();
-
+  get_pcb_ver();
   analogWriteFreq(400);
   analogWrite(PWM, nvram.pwm);
   pinMode(_24V_OUT, OUTPUT);
@@ -48,6 +48,7 @@ void setup()
   get_comset();
   get_otherset();
   Serial.begin(rate, comsets[comset]);
+  get_pcb_ver();
   if (nvram.nvram7 & NVRAM7_UPDATE) {
     disp(F("-" VER "-"));
     nvram.nvram7 &= ~ NVRAM7_UPDATE;

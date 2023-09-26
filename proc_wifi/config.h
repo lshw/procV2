@@ -16,8 +16,9 @@
 #define DEFAULT_URL0 "http://temp.cfido.com:808/proc_wifi.php"
 #define DEFAULT_URL1 "http://temp2.wf163.com:808/proc_wifi.php"
 #endif
-
-float get_R18() { 
+extern uint8_t pcb_ver;
+float get_R18() {
+if(pcb_ver == 2) return 47.000;
 switch(ESP.getChipId()) {
 case 0x9488F0:
 case 0x9463F5:
