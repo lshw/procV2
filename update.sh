@@ -20,9 +20,8 @@ else
   port=/dev/ttyS0
  fi
 #先试试 esptool.py
- lib/esptool.py --chip esp8266 --port $port  --baud 115200 write_flash 0 lib/proc_wifi.bin
+ lib/esptool.py --chip esp8266 --port $port  --baud 460800 write_flash 0 lib/proc_wifi.bin
  if [ $? == 0 ] ; then
-  lib/esptool.py --chip esp8266 --port $port  --baud 115200 run
   exit
  fi
 #esptool.py失败的话， 试试arduino带的 esptool
