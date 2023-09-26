@@ -184,20 +184,20 @@ void timer1s() {
   run_zmd = true;
 }
 uint8_t get_pcb_ver() {
-if(pcb_ver == 0) {
-Serial.begin(115200);
-pinMode(0, OUTPUT);
-pinMode(2,INPUT_PULLUP);
-digitalWrite(0, LOW);
-delay(1);
-if(digitalRead(2) == HIGH)
-pcb_ver = 2;
-else
-pcb_ver = 1;
-}
-pinMode(0,INPUT);
-pinMode(2,INPUT);
-return pcb_ver;
+  if (pcb_ver == 0) {
+    Serial.begin(115200);
+    pinMode(0, OUTPUT);
+    pinMode(2, INPUT_PULLUP);
+    digitalWrite(0, LOW);
+    delay(1);
+    if (digitalRead(2) == HIGH)
+      pcb_ver = 2;
+    else
+      pcb_ver = 1;
+  }
+  pinMode(0, INPUT);
+  pinMode(2, INPUT);
+  return pcb_ver;
 }
 #ifdef HAVE_AUTO_UPDATE
 void wget() {

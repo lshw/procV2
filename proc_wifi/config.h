@@ -18,15 +18,15 @@
 #endif
 extern uint8_t pcb_ver;
 float get_R18() {
-if(pcb_ver == 2) return 47.000;
-switch(ESP.getChipId()) {
-case 0x9488F0:
-case 0x9463F5:
-case 0x0DE19A:
-case 0x949CB5:
-return 43.200;
-}
-return 100.000;
+  if (pcb_ver == 2) return 47.000;
+  switch (ESP.getChipId()) {
+    case 0x9488F0:
+    case 0x9463F5:
+    case 0x0DE19A:
+    case 0x949CB5:
+      return 43.200;
+  }
+  return 100.000;
 }
 
 #endif //_CONFIG_H_

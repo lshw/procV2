@@ -21,77 +21,77 @@ int8_t day_cron_hour = -1, day_cron_minute = -1;
 void httpd_send_200(String javascript) {
   httpd.sendHeader( "charset", "utf-8" );
   httpd.send(200, "text/html", F("<html>"
-             "<head>"
-             "<title>") + hostname + " " + GIT_VER + F("</title>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             "<style type='text/css'>"
-             "hide {display:none;}"
-             "unhide {display:inline;}"
-             "</style>"
-             "<script>"
-             "function modi(url,text,Defaulttext) {"
-             "var data=prompt(text,Defaulttext);"
-             "if (data==null) {return false;}"
-             "location.replace(url+data);"
-             "}"
-             " pwm=") + String(nvram.pwm) + F(";"
-             " function ajax_get(url) {"
-             " xhr = new XMLHttpRequest();"
-             " xhr.open('GET', url, true);"
-             " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
-             " xhr.send();"
-             " }"
-             " function set_val(id,val) {"
-             "document.getElementById(id).textContent=val;"
-             " }"
-             " function goto_if(url,msg) {"
-             " if(confirm(msg))"
-             " location.replace(url);"
-             " else return false;"
-             " return true;"
-             " }"
-             " function hide(id){"
-             " document.getElementById(id).style.display='none';"
-             " }"
-             " function unhide(id){"
-             " document.getElementById(id).style.display='inline';"
-             " }"
-             " function ajax_if(url, msg) {"
-             " if(confirm(msg))"
-             " ajax_get(url);"
-             " else return false;"
-             " return true;"
-             " }"
-             " function modi(url,text,defaultext) {"
-             " var data=prompt(text,defaultext);"
-             " if( data == defaultext)"
-             " return false;"
-             " location.replace(url+data);"
-             " return true;"
-             "}"
-             " function setpwm(val) {"
-             " if(val<1) val=1;"
-             " if(val>1019) val=1019;"
-             " pwm=val;"
-             " set_val('pwm','pwm:'+val);"
-             " ajax_get('/switch.php?b=PWM&t='+val);"
-             "}"
-             " function ajax_modi(url,text,defaultext) {"
-             " var data=prompt(text,defaultext);"
-             " if( data == defaultext)"
-             " return false;"
-             " ajax_get(url+data);"
-             " return true;"
-             "}")
+                                 "<head>"
+                                 "<title>") + hostname + " " + GIT_VER + F("</title>"
+                                     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                                     "<style type='text/css'>"
+                                     "hide {display:none;}"
+                                     "unhide {display:inline;}"
+                                     "</style>"
+                                     "<script>"
+                                     "function modi(url,text,Defaulttext) {"
+                                     "var data=prompt(text,Defaulttext);"
+                                     "if (data==null) {return false;}"
+                                     "location.replace(url+data);"
+                                     "}"
+                                     " pwm=") + String(nvram.pwm) + F(";"
+                                         " function ajax_get(url) {"
+                                         " xhr = new XMLHttpRequest();"
+                                         " xhr.open('GET', url, true);"
+                                         " xhr.setRequestHeader('Content-Type', 'text/html; charset=UTF-8');"
+                                         " xhr.send();"
+                                         " }"
+                                         " function set_val(id,val) {"
+                                         "document.getElementById(id).textContent=val;"
+                                         " }"
+                                         " function goto_if(url,msg) {"
+                                         " if(confirm(msg))"
+                                         " location.replace(url);"
+                                         " else return false;"
+                                         " return true;"
+                                         " }"
+                                         " function hide(id){"
+                                         " document.getElementById(id).style.display='none';"
+                                         " }"
+                                         " function unhide(id){"
+                                         " document.getElementById(id).style.display='inline';"
+                                         " }"
+                                         " function ajax_if(url, msg) {"
+                                         " if(confirm(msg))"
+                                         " ajax_get(url);"
+                                         " else return false;"
+                                         " return true;"
+                                         " }"
+                                         " function modi(url,text,defaultext) {"
+                                         " var data=prompt(text,defaultext);"
+                                         " if( data == defaultext)"
+                                         " return false;"
+                                         " location.replace(url+data);"
+                                         " return true;"
+                                         "}"
+                                         " function setpwm(val) {"
+                                         " if(val<1) val=1;"
+                                         " if(val>1019) val=1019;"
+                                         " pwm=val;"
+                                         " set_val('pwm','pwm:'+val);"
+                                         " ajax_get('/switch.php?b=PWM&t='+val);"
+                                         "}"
+                                         " function ajax_modi(url,text,defaultext) {"
+                                         " var data=prompt(text,defaultext);"
+                                         " if( data == defaultext)"
+                                         " return false;"
+                                         " ajax_get(url+data);"
+                                         " return true;"
+                                         "}")
              + javascript +
              F("</script>"
-             "</head>"
-             "<body>")
+               "</head>"
+               "<body>")
              + head
              + body
              + footer
              + F("</body>"
-             "</html>"));
+                 "</html>"));
   httpd.client().stop();
 }
 
@@ -100,19 +100,19 @@ void update_head_footer() {
   snprintf_P(ymd, sizeof(ymd), PSTR("%04d-%02d-%02d"), __YEAR__, __MONTH__, __DAY__);
   head =
     F("SN:<mark>") + hostname + F("</mark> &nbsp; "
-    "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:") + String(rate) + "," + comset_str[comset] + F("<br>"
-    "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
-    "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
-    "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
-    "<button onclick=ajax_if('/switch.php?b=POWER&t=5000','按下电源键?')>长按电源</button>"
-    "<span style='white-space: nowrap;'><span id='a1' style='display:none'>"
-    "<button onclick=setpwm(pwm-50);><<</button>"
-    "<button onclick=setpwm(pwm-10);><</button></span>"
-    "<button onclick=unhide('a1');unhide('a2');setpwm(Number(prompt('输入pwm值(0-1023)',pwm)));><span id=pwm>pwm:")
+                                  "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:") + String(rate) + "," + comset_str[comset] + F("<br>"
+                                      "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
+                                      "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
+                                      "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
+                                      "<button onclick=ajax_if('/switch.php?b=POWER&t=5000','按下电源键?')>长按电源</button>"
+                                      "<span style='white-space: nowrap;'><span id='a1' style='display:none'>"
+                                      "<button onclick=setpwm(pwm-50);><<</button>"
+                                      "<button onclick=setpwm(pwm-10);><</button></span>"
+                                      "<button onclick=unhide('a1');unhide('a2');setpwm(Number(prompt('输入pwm值(0-1023)',pwm)));><span id=pwm>pwm:")
     + nvram.pwm + F("</span></button>"
-    "<span id=a2 style='display:none'><button onclick=setpwm(pwm+10);>></button>"
-    "<button onclick=setpwm(pwm+50);>>></button></span>"
-    "</span>");
+                    "<span id=a2 style='display:none'><button onclick=setpwm(pwm+10);>></button>"
+                    "<button onclick=setpwm(pwm+50);>>></button></span>"
+                    "</span>");
   get_batt();
   if (digitalRead(_24V_OUT) == LOW)
     head += F("<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出") + String(get_batt()) + F("V已关闭</button>");
@@ -122,8 +122,8 @@ void update_head_footer() {
 
   footer =
     F("<hr><table width=100%><tr>"
-    "<td align=left>") + mylink + F("</td>"
-    "<td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table></body></html>");
+      "<td align=left>") + mylink + F("</td>"
+                                      "<td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table></body></html>");
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
@@ -269,26 +269,26 @@ void set_php() {
   String select_dhcp = "", select_ip = "";
   if (is_dhcp) select_dhcp = F("checked");
   else select_ip = F("checked");
-             body = F("<a href=/><button>返回首页</button></a>"
-             "<hr>")
-             + wifi_stat + F("<hr>") + wifi_scan +
-             F("<form action=/save.php method=post>"
-             "输入ssid:passwd(可以多行多个)<br>"
-             "<textarea  style='width:500px;height:80px;' name=data>") + get_ssid() + F("</textarea><br>"
-             "<input type=radio name=is_dhcp value=1 ") + select_dhcp + F(">dhcp&nbsp;<input type=radio name=is_dhcp value=0 ") + select_ip + F(">"
-             "ip:<input name=local_ip size=8 value='") + local_ip.toString() + F("'>"
-             "子网掩码:<input name=netmask size=8 value='") + netmask.toString() + F("'>"
-             "网关:<input name=gateway size=8 value='") + gateway.toString() + F("'>"
-             "dns:<input name=dns size=8 value='") + dns.toString() + F("'><br>"
-             "ntp:<input name=ntp size=20 value=") + ntpServerName[0] + F("><br>")
+  body = F("<a href=/><button>返回首页</button></a>"
+           "<hr>")
+         + wifi_stat + F("<hr>") + wifi_scan +
+         F("<form action=/save.php method=post>"
+           "输入ssid:passwd(可以多行多个)<br>"
+           "<textarea  style='width:500px;height:80px;' name=data>") + get_ssid() + F("</textarea><br>"
+               "<input type=radio name=is_dhcp value=1 ") + select_dhcp + F(">dhcp&nbsp;<input type=radio name=is_dhcp value=0 ") + select_ip + F(">"
+                   "ip:<input name=local_ip size=8 value='") + local_ip.toString() + F("'>"
+                       "子网掩码:<input name=netmask size=8 value='") + netmask.toString() + F("'>"
+                           "网关:<input name=gateway size=8 value='") + gateway.toString() + F("'>"
+                               "dns:<input name=dns size=8 value='") + dns.toString() + F("'><br>"
+                                   "ntp:<input name=ntp size=20 value=") + ntpServerName[0] + F("><br>")
 #ifdef HAVE_AUTO_UPDATE
-             +F("<hr>可以设置自己的自动升级服务器地址(清空恢复原始设置)<br>"
+         + F("<hr>可以设置自己的自动升级服务器地址(清空恢复原始设置)<br>"
              "url0:<input maxlength=100  size=50 type=text value='") + get_url(0) + F("' name=url><br>"
-             "url1:<input maxlength=100  size=50 type=text value='") + get_url(1) + F("' name=url1><br>"
-             "间隔时间:<input maxlength=3  size=3 type=text value='") + update_time + F("' name=update_time>小时,0为关闭<br>")
+                 "url1:<input maxlength=100  size=50 type=text value='") + get_url(1) + F("' name=url1><br>"
+                     "间隔时间:<input maxlength=3  size=3 type=text value='") + update_time + F("' name=update_time>小时,0为关闭<br>")
 #endif
-             + update_auth +
-             F("<hr>串口设置:<select name=rate><option value=") + rate + ">" + rate + F("</option>"
+         + update_auth +
+         F("<hr>串口设置:<select name=rate><option value=") + rate + ">" + rate + F("</option>"
              "<option value='460800'>460800</option>"
              "<option value='230400'>230400</option>"
              "<option value='115200'>115200</option>"
@@ -300,18 +300,18 @@ void set_php() {
              "<option value='2400'>2400</option>"
              "<option value='1200'>1200</option></select>"
              "<select name=comset><option value='") + comset + "'>" + comset_str[comset] + F("</option>")
-             + comset_option +
-             F("</select>"
-             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='") + String(day_cron) + F("'>清空关闭"
-             "<hr>主机ip:<input type=text name=master_ip size=20 value='") + master_ip.toString() + F("'>"
-             "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
-             "<textarea style='width:500px;height:80px;' name=mylink>") + mylink + F("</textarea><br>"
-             "<hr><input type=submit name=submit value=保存>"
-             "</form>"
-             "<hr>"
-             "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
-             "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
-             "<input type='submit' value='上传'></form>");
+         + comset_option +
+         F("</select>"
+           "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='") + String(day_cron) + F("'>清空关闭"
+               "<hr>主机ip:<input type=text name=master_ip size=20 value='") + master_ip.toString() + F("'>"
+                   "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
+                   "<textarea style='width:500px;height:80px;' name=mylink>") + mylink + F("</textarea><br>"
+                       "<hr><input type=submit name=submit value=保存>"
+                       "</form>"
+                       "<hr>"
+                       "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
+                       "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
+                       "<input type='submit' value='上传'></form>");
   httpd_send_200("");
   ap_on_time = millis() + 200000;
 }
@@ -339,8 +339,8 @@ void handleNotFound() {
     }
   }
   message = F("File Not Found\n\n"
-  "URI: ") + httpd.uri() +
-  F("\nArguments: ") + httpd.args() + "\n";
+              "URI: ") + httpd.uri() +
+            F("\nArguments: ") + httpd.args() + "\n";
 
   httpd.send ( 404, "text/plain", message );
   httpd.client().stop();
@@ -385,10 +385,10 @@ void add_ssid_php() {
   SPIFFS.end();
   wifi_setup();
   httpd.send(200, "text/html", F("<html><head></head><body>"
-             "<script>"
-             "location.replace('/set.php');"
-             "</script>"
-             "</body></html>"));
+                                 "<script>"
+                                 "location.replace('/set.php');"
+                                 "</script>"
+                                 "</body></html>"));
   httpd.client().stop();
 }
 void save_php() {
@@ -497,7 +497,7 @@ void save_php() {
       fp.print((char *)www_password);
       fp.close();
     } else if (httpd.argName(i).compareTo("master_ip") == 0) {
-      if(data.length() < 5) data="0.0.0.0"; //空为关闭
+      if (data.length() < 5) data = "0.0.0.0"; //空为关闭
       if (master_ip.toString() != data) {
         set_change |= OTHER_CHANGE;
         master_ip.fromString(data);
@@ -509,12 +509,12 @@ void save_php() {
       fp.print((char *)www_password);
       fp.close();
     } else if (httpd.argName(i).compareTo("day_cron") == 0) {
-      if(data.length() < 5) {
+      if (data.length() < 5) {
         SPIFFS.remove("/day_cron");
         day_cron_hour = -1;
         day_cron_minute = -1;
         memset(day_cron, 0, sizeof(day_cron));
-      }else {
+      } else {
         strncpy(day_cron, data.c_str(), sizeof(day_cron));
         if (day_cron_hour != atoi(day_cron) || day_cron_minute != atoi(&day_cron[3])) {
           day_cron_hour = atoi(day_cron);
@@ -558,23 +558,23 @@ void httpd_listen() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       httpd.send(200, "text/html", F("<html>"
-                 "<head>"
-                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                 "</head>"
-                 "<body>"
-                 "升级失败 <a href=/>返回</a>"
-                 "</body>"
-                 "</html>")
+                                     "<head>"
+                                     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                                     "</head>"
+                                     "<body>"
+                                     "升级失败 <a href=/>返回</a>"
+                                     "</body>"
+                                     "</html>")
                 );
     } else if (crc.finalize() == CRC_MAGIC) {
       httpd.send(200, "text/html", F("<html>"
-                 "<head>"
-                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                 "</head>"
-                 "<body>"
-                 "<script>setTimeout(function(){ alert('升级成功!');location.replace('/set.php'); }, 15000); </script>"
-                 "</body>"
-                 "</html>")
+                                     "<head>"
+                                     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                                     "</head>"
+                                     "<body>"
+                                     "<script>setTimeout(function(){ alert('升级成功!');location.replace('/set.php'); }, 15000); </script>"
+                                     "</body>"
+                                     "</html>")
                 );
       ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
@@ -597,10 +597,10 @@ void httpd_listen() {
       Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
       yield();
-        if (crc.finalize() != CRC_MAGIC)
-          Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
-        else
-          Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
+      if (crc.finalize() != CRC_MAGIC)
+        Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
+      else
+        Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
       Update.end(true);
     }
   });

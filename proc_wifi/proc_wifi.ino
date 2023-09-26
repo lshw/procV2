@@ -157,7 +157,7 @@ void loop()
           httpd_listen();
         }
         httpd_loop();
-      } else if(millis() > 30000) { //30秒不能登陆网络进smart_config
+      } else if (millis() > 30000) { //30秒不能登陆网络进smart_config
         smart_config();
         ESP.restart();
       }
@@ -194,8 +194,8 @@ void ping_powerup() {
   uint32_t ms0;
   ping_status = 0;
   if (master_ip.toString() != String("0.0.0.0") && pinger.Ping(master_ip)) {
-    ms0=millis()+30000; //等待30秒 ping回应
-    while (ms0>millis()) {
+    ms0 = millis() + 30000; //等待30秒 ping回应
+    while (ms0 > millis()) {
       if (ping_status != 0) break;
       yield();
     }
