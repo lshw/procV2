@@ -173,5 +173,7 @@ void send_ram() {
     Wire.write(ram_buf[i]);
   Wire.endTransmission();    // stop transmitting
 }
-
+void disp(const __FlashStringHelper *str) {
+  disp((char *)String(str).c_str());
+}
 #endif //__HT16C21_H__

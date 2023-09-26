@@ -49,7 +49,7 @@ void setup()
   get_otherset();
   Serial.begin(rate, comsets[comset]);
   if (nvram.nvram7 & NVRAM7_UPDATE) {
-    disp("-" VER "-");
+    disp(F("-" VER "-"));
     nvram.nvram7 &= ~ NVRAM7_UPDATE;
     nvram.change = 1;
     delay(1000);
@@ -68,14 +68,14 @@ void setup()
       wdt_disable();
       nvram.proc = SMART_CONFIG_MODE;//ota以后，
       nvram.change = 1;
-      disp(" OTA ");
+      disp(F(" OTA "));
       ota_setup();
       httpd_listen();
       break;
     case SMART_CONFIG_MODE:
       nvram.proc = 0;//ota以后，
       nvram.change = 1;
-      disp("CO  ");
+      disp(F("CO  "));
       smart_config();
       save_nvram();
       ESP.restart();
@@ -123,7 +123,7 @@ void loop()
         wifi_set_clean();
         wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
         Serial.println(F("Smartconfig OK"));
-        disp("6.6.6.6.6.");
+        disp(F("6.6.6.6.6."));
         proc = 0;
         ESP.restart();
         return;
@@ -199,14 +199,14 @@ void ping_powerup() {
       yield();
     }
     if (ping_status == -1) {
-      net_log("ping " + master_ip.toString() + " fail, power up!");
-      disp("11111");
+      net_log(F("ping ") + master_ip.toString() + F(" fail, power up!"));
+      disp(F("11111"));
       digitalWrite(PC_POWER, HIGH);
       pcPowerTicker.detach();
       pcPowerTicker.attach_ms(300, pcPowerUp);
       yield();
     } else
-      net_log("ping " + master_ip.toString() + " ok, skip power up!");
+      net_log(F("ping ") + master_ip.toString() + F(" ok, skip power up!"));
   }
 }
 bool smart_config() {
@@ -217,20 +217,20 @@ bool smart_config() {
   if (wifi_connected_is_ok()) return true;
   WiFi.mode(WIFI_STA);
   WiFi.beginSmartConfig();
-  Serial.println("SmartConfig start");
+  Serial.println(F("SmartConfig start"));
   for (uint8_t i = 0; i < 100; i++) {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
-      Serial.println("OK");
+      Serial.println(F("OK"));
       return true;
     }
     Serial.write('.');
     delay(1000);
-    snprintf(disp_buf, sizeof(disp_buf), "CON%02d", i);
+    snprintf_P(disp_buf, sizeof(disp_buf), PSTR("CON%02d"), i);
     disp(disp_buf);
   }
-  snprintf(disp_buf, sizeof(disp_buf), " %3.2f ", v);
+  snprintf_P(disp_buf, sizeof(disp_buf), PSTR(" %3.2f "), v);
   disp(disp_buf);
   return false;
 }

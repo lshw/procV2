@@ -112,18 +112,18 @@ void update_disp() {
   uint8_t zmdsize = strlen(zmd_disp);
   if (wifi_connected_is_ok()) {
     if (proc == OTA_MODE) {
-      snprintf(zmd_disp, sizeof(zmd_disp), " OTA %s -%s-  ", WiFi.localIP().toString().c_str(), VER);
+      snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" OTA %s -" VER "-  "), WiFi.localIP().toString().c_str());
     } else {
       if (year != 0)
-        snprintf(zmd_disp, sizeof(zmd_disp), " 20%02d-%02d-%02d %02d-%02d  %s  ", year, month, day, hour, minute, WiFi.localIP().toString().c_str());
+        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" 20%02d-%02d-%02d %02d-%02d  %s  "), year, month, day, hour, minute, WiFi.localIP().toString().c_str());
       else
-        snprintf(zmd_disp, sizeof(zmd_disp), " %s ", WiFi.localIP().toString().c_str());
+        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s "), WiFi.localIP().toString().c_str());
     }
   } else {
     if (proc == OTA_MODE)
-      snprintf(zmd_disp, sizeof(zmd_disp), " AP -%s- ", VER);
+      snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" AP -%s- "), VER);
     else
-      snprintf(zmd_disp, sizeof(zmd_disp), " %3.2f -%s-  ", v, VER);
+      snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %3.2f -%s-  "), v, VER);
   }
   if (zmdsize != strlen(zmd_disp)) zmd_offset = 0; //长度有变化， 就从头开始显示
 }
@@ -264,7 +264,7 @@ String get_url(uint8_t no) {
 #endif
 String get_ssid() {
   File fp;
-  String ssid = "test:cfido.com";
+  String ssid = F("test:cfido.com");
   if (!SPIFFS.begin()) return ssid;
   fp = SPIFFS.open("/ssid.txt", "r");
   if (fp) {
@@ -364,7 +364,7 @@ void get_mylink() {
     }
   }
   mylink.trim();
-  if (mylink == "") mylink = "在线文档:\r<a href=https://www.bjlx.org.cn/node/929>https://www.bjlx.org.cn/node/929</a>";
+  if (mylink == "") mylink = F("在线文档:\r<a href=https://www.bjlx.org.cn/node/929>https://www.bjlx.org.cn/node/929</a>");
 }
 
 void get_day_cron() {

@@ -150,14 +150,14 @@ void update_progress(int cur, int total) {
 
 bool http_update()
 {
-  disp("H UP. ");
+  disp(F("H UP. "));
   if (nvram.nvram7 & NVRAM7_UPDATE) {
     nvram.proc = 0;
     nvram.nvram7 |= NVRAM7_UPDATE;
     nvram.change = 1;
   }
   WiFiClient client;
-  String update_url = "http://www.anheng.com.cn/firmware.php?type=procV2&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER; //php可以在header里下发X-MD5作为校验
+  String update_url = F("http://www.anheng.com.cn/firmware.php?type=procV2&SN=") + hostname + F("&GIT=" GIT_VER "&ver=" VER); //php可以在header里下发X-MD5作为校验
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return  ret = ESPhttpUpdate.update(client, update_url);
   update_url = "";

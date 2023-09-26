@@ -20,9 +20,9 @@ int8_t day_cron_hour = -1, day_cron_minute = -1;
 
 void httpd_send_200(String javascript) {
   httpd.sendHeader( "charset", "utf-8" );
-  httpd.send(200, "text/html", "<html>"
+  httpd.send(200, "text/html", F("<html>"
              "<head>"
-             "<title>" + hostname + " " + GIT_VER + "</title>"
+             "<title>") + hostname + " " + GIT_VER + F("</title>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
              "<style type='text/css'>"
              "hide {display:none;}"
@@ -34,7 +34,7 @@ void httpd_send_200(String javascript) {
              "if (data==null) {return false;}"
              "location.replace(url+data);"
              "}"
-             " pwm=" + String(nvram.pwm) + ";"
+             " pwm=") + String(nvram.pwm) + F(";"
              " function ajax_get(url) {"
              " xhr = new XMLHttpRequest();"
              " xhr.open('GET', url, true);"
@@ -82,25 +82,25 @@ void httpd_send_200(String javascript) {
              " return false;"
              " ajax_get(url+data);"
              " return true;"
-             "}"
+             "}")
              + javascript +
-             "</script>"
+             F("</script>"
              "</head>"
-             "<body>"
+             "<body>")
              + head
              + body
              + footer
-             + "</body>"
-             "</html>");
+             + F("</body>"
+             "</html>"));
   httpd.client().stop();
 }
 
 void update_head_footer() {
   char ymd[12];
-  snprintf(ymd, sizeof(ymd), "%04d-%02d-%02d", __YEAR__, __MONTH__, __DAY__);
+  snprintf_P(ymd, sizeof(ymd), PSTR("%04d-%02d-%02d"), __YEAR__, __MONTH__, __DAY__);
   head =
-    "SN:<mark>" + hostname + "</mark> &nbsp; "
-    "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:" + String(rate) + "," + comset_str[comset] + "<br>"
+    F("SN:<mark>") + hostname + F("</mark> &nbsp; "
+    "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:") + String(rate) + "," + comset_str[comset] + F("<br>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
     "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
@@ -108,22 +108,22 @@ void update_head_footer() {
     "<span style='white-space: nowrap;'><span id='a1' style='display:none'>"
     "<button onclick=setpwm(pwm-50);><<</button>"
     "<button onclick=setpwm(pwm-10);><</button></span>"
-    "<button onclick=unhide('a1');unhide('a2');setpwm(Number(prompt('输入pwm值(0-1023)',pwm)));><span id=pwm>pwm:"
-    + nvram.pwm + "</span></button>"
+    "<button onclick=unhide('a1');unhide('a2');setpwm(Number(prompt('输入pwm值(0-1023)',pwm)));><span id=pwm>pwm:")
+    + nvram.pwm + F("</span></button>"
     "<span id=a2 style='display:none'><button onclick=setpwm(pwm+10);>></button>"
     "<button onclick=setpwm(pwm+50);>>></button></span>"
-    "</span>";
+    "</span>");
   get_batt();
   if (digitalRead(_24V_OUT) == LOW)
-    head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已关闭</button>";
+    head += F("<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=1','开启电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出") + String(get_batt()) + F("V已关闭</button>");
   else
-    head += "<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出" + String(get_batt()) + "V已开启</button>";
-  head +=   "<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>";
+    head += F("<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出") + String(get_batt()) + F("V已开启</button>");
+  head +=   F("<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>");
 
   footer =
-    "<hr><table width=100%><tr>"
-    "<td align=left>" + mylink + "</td>"
-    "<td><td align=right valign=bottom>程序编译时间: <mark>" + String(ymd) + " " __TIME__ "</mark></td></tr></table></body></html>";
+    F("<hr><table width=100%><tr>"
+    "<td align=left>") + mylink + F("</td>"
+    "<td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table></body></html>");
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
@@ -132,16 +132,16 @@ void handleRoot() {
   yield();
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
-  body = "<a href=/set.php><button>设置</button></a>";
-  if (proc != OTA_MODE) body += "<a href=http://logout@" + WiFi.localIP().toString() + "><button>退出</button></a>";
+  body = F("<a href=/set.php><button>设置</button></a>");
+  if (proc != OTA_MODE) body += F("<a href=http://logout@") + WiFi.localIP().toString() + F("><button>退出</button></a>");
   telnets = "";
   for (uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
-      telnets += "<tr align=center><td><input type=checkbox";
-      if (client_enable[i]) body += " checked";
-      telnets += " onclick=ajax_get('/telnet_client.php?id=" + String(i) + "&checked='+this.checked); >#" + String(i + 1) + "<td>" + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + "</td><td>" + String((millis() - client_ms[i]) / 1000) + "</td><td>" + String(client_read[i]) + "</td></tr>";
+      telnets += F("<tr align=center><td><input type=checkbox");
+      if (client_enable[i]) body += F(" checked");
+      telnets += F(" onclick=ajax_get('/telnet_client.php?id=") + String(i) + F("&checked='+this.checked); >#") + String(i + 1) + F("<td>") + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + F("</td><td>") + String((millis() - client_ms[i]) / 1000) + F("</td><td>") + String(client_read[i]) + F("</td></tr>");
     }
-  if (telnets != "") body += "<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>" + telnets + "</table>";
+  if (telnets != "") body += F("<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>") + telnets + F("</table>");
 
   httpd_send_200("");
 }
@@ -234,61 +234,61 @@ void set_php() {
   if (proc != OTA_MODE && !httpd.authenticate(www_username, www_password))
     return httpd.requestAuthentication();
   if (proc == OTA_MODE) {
-    update_auth = "<hr>登陆名:<input type=text value="
+    update_auth = F("<hr>登陆名:<input type=text value=")
                   + String((char *)www_username) +
-                  " name=username size=10 maxsize=100>&nbsp;密码:<input type=text value="
+                  F(" name=username size=10 maxsize=100>&nbsp;密码:<input type=text value=")
                   + String((char *) www_password) +
-                  " name=password size=10 maxsize=100><br>";
+                  F(" name=password size=10 maxsize=100><br>");
   }
   int n = WiFi.scanNetworks();
   if (n > 0) {
-    wifi_scan = "自动扫描到如下WiFi热点,点击添加:<br>";
+    wifi_scan = F("自动扫描到如下WiFi热点,点击添加:<br>");
     for (int i = 0; i < n; ++i) {
       ssid = String(WiFi.SSID(i));
       if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-        wifi_scan += "&nbsp;<button onclick=modi('/add_ssid.php?data="
+        wifi_scan += F("&nbsp;<button onclick=modi('/add_ssid.php?data=")
                      + ssid +
-                     ":','输入无线密码','')>*";
+                     F(":','输入无线密码','')>*");
       else
-        wifi_scan += "&nbsp;<button onclick=gotoif('/add_ssid.php?data=" + ssid + "')>";
-      wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
-      wifi_scan += "</button>";
+        wifi_scan += F("&nbsp;<button onclick=gotoif('/add_ssid.php?data=") + ssid + F("')>");
+      wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + F("dbm)");
+      wifi_scan += F("</button>");
       delay(10);
     }
     wifi_scan += "<br>";
   }
   if (wifi_connected_is_ok()) {
-    wifi_stat = "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp; "
-                + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp; "
-                + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp; "
-                + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; "
-                + "电压:<mark>" + String(v) + "</mark>V<br>";
+    wifi_stat = F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp; ")
+                + F("ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp; ")
+                + F("信号:<mark>") + String(WiFi.RSSI()) + F("</mark>dbm &nbsp; ")
+                + F("ip:<mark>") + WiFi.localIP().toString() + F("</mark> &nbsp; ")
+                + F("电压:<mark>") + String(v) + F("</mark>V<br>");
   }
   String comset_option;
-  for (uint8_t i = 0; i < sizeof(comsets) / sizeof(SerialConfig); i++) comset_option += "<option value=" + String(i) + ">" + comset_str[i] + "</option>";
+  for (uint8_t i = 0; i < sizeof(comsets) / sizeof(SerialConfig); i++) comset_option += F("<option value=") + String(i) + ">" + comset_str[i] + F("</option>");
   String select_dhcp = "", select_ip = "";
-  if (is_dhcp) select_dhcp = "checked";
-  else select_ip = "checked";
-             body = "<a href=/><button>返回首页</button></a>"
-             "<hr>"
-             + wifi_stat + "<hr>" + wifi_scan +
-             "<form action=/save.php method=post>"
+  if (is_dhcp) select_dhcp = F("checked");
+  else select_ip = F("checked");
+             body = F("<a href=/><button>返回首页</button></a>"
+             "<hr>")
+             + wifi_stat + F("<hr>") + wifi_scan +
+             F("<form action=/save.php method=post>"
              "输入ssid:passwd(可以多行多个)<br>"
-             "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-             "<input type=radio name=is_dhcp value=1 " + select_dhcp + ">dhcp&nbsp;<input type=radio name=is_dhcp value=0 " + select_ip + ">"
-             "ip:<input name=local_ip size=8 value='" + local_ip.toString() + "'>"
-             "子网掩码:<input name=netmask size=8 value='" + netmask.toString() + "'>"
-             "网关:<input name=gateway size=8 value='" + gateway.toString() + "'>"
-             "dns:<input name=dns size=8 value='" + dns.toString() + "'><br>"
-             "ntp:<input name=ntp size=20 value=" + ntpServerName[0] + "><br>"
+             "<textarea  style='width:500px;height:80px;' name=data>") + get_ssid() + F("</textarea><br>"
+             "<input type=radio name=is_dhcp value=1 ") + select_dhcp + F(">dhcp&nbsp;<input type=radio name=is_dhcp value=0 ") + select_ip + F(">"
+             "ip:<input name=local_ip size=8 value='") + local_ip.toString() + F("'>"
+             "子网掩码:<input name=netmask size=8 value='") + netmask.toString() + F("'>"
+             "网关:<input name=gateway size=8 value='") + gateway.toString() + F("'>"
+             "dns:<input name=dns size=8 value='") + dns.toString() + F("'><br>"
+             "ntp:<input name=ntp size=20 value=") + ntpServerName[0] + F("><br>")
 #ifdef HAVE_AUTO_UPDATE
-             "<hr>可以设置自己的自动升级服务器地址(清空恢复原始设置)<br>"
-             "url0:<input maxlength=100  size=50 type=text value='" + get_url(0) + "' name=url><br>"
-             "url1:<input maxlength=100  size=50 type=text value='" + get_url(1) + "' name=url1><br>"
-             "间隔时间:<input maxlength=3  size=3 type=text value='" + update_time + "' name=update_time>小时,0为关闭<br>"
+             +F("<hr>可以设置自己的自动升级服务器地址(清空恢复原始设置)<br>"
+             "url0:<input maxlength=100  size=50 type=text value='") + get_url(0) + F("' name=url><br>"
+             "url1:<input maxlength=100  size=50 type=text value='") + get_url(1) + F("' name=url1><br>"
+             "间隔时间:<input maxlength=3  size=3 type=text value='") + update_time + F("' name=update_time>小时,0为关闭<br>")
 #endif
              + update_auth +
-             "<hr>串口设置:<select name=rate><option value=" + rate + ">" + rate + "</option>"
+             F("<hr>串口设置:<select name=rate><option value=") + rate + ">" + rate + F("</option>"
              "<option value='460800'>460800</option>"
              "<option value='230400'>230400</option>"
              "<option value='115200'>115200</option>"
@@ -299,19 +299,19 @@ void set_php() {
              "<option value='4800'>4800</option>"
              "<option value='2400'>2400</option>"
              "<option value='1200'>1200</option></select>"
-             "<select name=comset><option value='" + comset + "'>" + comset_str[comset] + "</option>"
+             "<select name=comset><option value='") + comset + "'>" + comset_str[comset] + F("</option>")
              + comset_option +
-             "</select>"
-             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='" + String(day_cron) + "'>清空关闭"
-             "<hr>主机ip:<input type=text name=master_ip size=20 value='" + master_ip.toString() + "'>"
+             F("</select>"
+             "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='") + String(day_cron) + F("'>清空关闭"
+             "<hr>主机ip:<input type=text name=master_ip size=20 value='") + master_ip.toString() + F("'>"
              "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
-             "<textarea style='width:500px;height:80px;' name=mylink>" + mylink + "</textarea><br>"
+             "<textarea style='width:500px;height:80px;' name=mylink>") + mylink + F("</textarea><br>"
              "<hr><input type=submit name=submit value=保存>"
              "</form>"
              "<hr>"
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<br>"
              "<input type='file' name='update'onchange=\"var size=this.files[0].size;document.getElementById('size_disp').textContent=size;document.getElementById('size').value=this.files[0].size;\"><span id=size_disp></span><input type=hidden name=size id=size><br>"
-             "<input type='submit' value='上传'></form>";
+             "<input type='submit' value='上传'></form>");
   httpd_send_200("");
   ap_on_time = millis() + 200000;
 }
@@ -338,9 +338,9 @@ void handleNotFound() {
       return;
     }
   }
-  message = "File Not Found\n\n";
-  "URI: " + httpd.uri() +
-  "\nArguments: " + httpd.args() + "\n";
+  message = F("File Not Found\n\n"
+  "URI: ") + httpd.uri() +
+  F("\nArguments: ") + httpd.args() + "\n";
 
   httpd.send ( 404, "text/plain", message );
   httpd.client().stop();
@@ -384,11 +384,11 @@ void add_ssid_php() {
   fp.close();
   SPIFFS.end();
   wifi_setup();
-  httpd.send(200, "text/html", "<html><head></head><body>"
+  httpd.send(200, "text/html", F("<html><head></head><body>"
              "<script>"
              "location.replace('/set.php');"
              "</script>"
-             "</body></html>");
+             "</body></html>"));
   httpd.client().stop();
 }
 void save_php() {
@@ -529,7 +529,7 @@ void save_php() {
   }
   url = "";
   wifi_setup();
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/set.php');</script></body></html>");
+  httpd.send(200, "text/html", F("<html><head></head><body><script>location.replace('/set.php');</script></body></html>"));
   httpd.client().stop();
   //  yield();
   SPIFFS.end();
@@ -557,30 +557,30 @@ void httpd_listen() {
     }
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
-      httpd.send(200, "text/html", "<html>"
+      httpd.send(200, "text/html", F("<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                  "</head>"
                  "<body>"
                  "升级失败 <a href=/>返回</a>"
                  "</body>"
-                 "</html>"
+                 "</html>")
                 );
     } else if (crc.finalize() == CRC_MAGIC) {
-      httpd.send(200, "text/html", "<html>"
+      httpd.send(200, "text/html", F("<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                  "</head>"
                  "<body>"
                  "<script>setTimeout(function(){ alert('升级成功!');location.replace('/set.php'); }, 15000); </script>"
                  "</body>"
-                 "</html>"
+                 "</html>")
                 );
       ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
       ESP.restart();
     } else {
-      body = "升级失败 <a href=/><buttom>返回首页</buttom></a>";
+      body = F("升级失败 <a href=/><buttom>返回首页</buttom></a>");
       httpd_send_200("");
     }
   }, []() {
@@ -620,9 +620,9 @@ void ap_loop() {
     get_batt();
     system_soft_wdt_feed ();
     ms0 = (ap_on_time - millis()) / 1000;
-    if (ms0 < 10) sprintf(disp_buf, "AP  %d", ms0);
-    else if (ms0 < 100) sprintf(disp_buf, "AP %d", ms0);
-    else sprintf(disp_buf, "AP%d", ms0);
+    if (ms0 < 10) sprintf_P(disp_buf, PSTR("AP  %d"), ms0);
+    else if (ms0 < 100) sprintf_P(disp_buf, PSTR("AP %d"), ms0);
+    else sprintf_P(disp_buf, PSTR("AP%d"), ms0);
     ms0 = millis() + 1000;
     disp(disp_buf);
 
@@ -634,7 +634,7 @@ void ap_loop() {
           nvram.proc = 0;
           nvram.change = 1;
         }
-        disp("00000");
+        disp(F("00000"));
         ht16c21_cmd(0x84, 0);
         httpd.close();
         ESP.restart();
