@@ -2,7 +2,8 @@ a.out
 \#*
 lib/*.bin
 lib/uncrc32
-pcb/201*
+lib/changelog.txt
+pcb/*.zip
 *~
 .~*
 \.*.sw?
