@@ -100,7 +100,7 @@ void update_head_footer() {
   snprintf_P(ymd, sizeof(ymd), PSTR("%04d-%02d-%02d"), __YEAR__, __MONTH__, __DAY__);
   head =
     F("SN:<mark>") + hostname + F("</mark> &nbsp; "
-                                  "版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;串口:") + String(rate) + "," + comset_str[comset] + F("<br>"
+                                  "软件版本:<mark>" VER "-" GIT_VER "</mark>&nbsp;&nbsp;硬件版本:<mark>2.") + String(pcb_ver) + F("</mark>&nbsp;&nbsp;串口:") + String(rate) + "," + comset_str[comset] + F("<br>"
                                       "<button onclick=ajax_if('/switch.php?b=RESET&t=300','复位电脑?')>短按复位</button>"
                                       "<button onclick=ajax_if('/switch.php?b=RESET&t=5000','复位电脑?')>长按复位</button>"
                                       "<button onclick=ajax_if('/switch.php?b=POWER&t=300','按下电源键?')>短按电源</button>"
