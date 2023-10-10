@@ -17,7 +17,9 @@
 #define DEFAULT_URL1 "http://temp2.wf163.com:808/proc_wifi.php"
 #endif
 extern uint8_t pcb_ver;
+uint8_t get_pcb_ver();
 float get_R18() {
+  if (pcb_ver == 0) return get_pcb_ver();
   if (pcb_ver == 2) return 47.000;
   switch (ESP.getChipId()) {
     case 0x9488F0:
