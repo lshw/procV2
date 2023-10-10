@@ -94,3 +94,4 @@ lib/uncrc32 lib/proc_wifi.bin $CRC_MAGIC
   $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/proc_wifi.bin
  fi
 fi
+echo $ver
