@@ -120,10 +120,13 @@ void update_head_footer() {
     head += F("<button onclick=\"if(ajax_if('/switch.php?b=_24V_OUT&t=0','关闭电源输出?')) setTimeout(function(){window.location.reload();},1000);\">电源输出") + String(get_batt()) + F("V已开启</button>");
   head +=   F("<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>");
 
-  footer =
-    F("<hr><table width=100%><tr>"
-      "<td align=left>") + mylink
-    + F("</td><td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table><br>编译参数:<br>" BUILD_SET "</body></html>");
+  footer = F("<hr>")
+           + mylink
+           + F("<hr>程序编译时间: <mark>") + String(ymd)
+           + F(" " __TIME__ "</mark><br>"
+               "编译参数:<br>"
+               "<mark>" BUILD_SET "</mark>"
+               "</body></html>");
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
