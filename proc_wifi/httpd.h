@@ -243,23 +243,29 @@ void set_php() {
                   + String((char *) www_password) +
                   F(" name=password size=10 maxsize=100><br>");
   }
-  int n = WiFi.scanNetworks();
-  if (n > 0) {
-    wifi_scan = F("自动扫描到如下WiFi热点,点击添加:<br>");
-    for (int i = 0; i < n; ++i) {
-      ssid = String(WiFi.SSID(i));
-      if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-        wifi_scan += F("&nbsp;<button onclick=modi('/add_ssid.php?data=")
-                     + ssid +
-                     F(":','输入无线密码','')>*");
-      else
-        wifi_scan += F("&nbsp;<button onclick=gotoif('/add_ssid.php?data=") + ssid + F("')>");
-      wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + F("dbm)");
-      wifi_scan += F("</button>");
-      delay(10);
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("wifi_scan") == 0) {
+      int n = WiFi.scanNetworks();
+      if (n > 0) {
+        wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
+        for (int i = 0; i < n; ++i) {
+          ssid = String(WiFi.SSID(i));
+          if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
+            wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
+          else
+            wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
+          wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
+          wifi_scan += "</button>";
+          delay(10);
+        }
+        wifi_scan += "<br>";
+      }
     }
-    wifi_scan += "<br>";
   }
+  if (wifi_scan == "") {
+    wifi_scan = "<a href=/set.php?wifi_scan=1><buttom>扫描WiFi</buttom></a>";
+  }
+
   if (wifi_connected_is_ok()) {
     wifi_stat = F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp; ")
                 + F("ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp; ")
