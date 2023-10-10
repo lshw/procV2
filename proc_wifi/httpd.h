@@ -122,8 +122,8 @@ void update_head_footer() {
 
   footer =
     F("<hr><table width=100%><tr>"
-      "<td align=left>") + mylink + F("</td>"
-                                      "<td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table></body></html>");
+      "<td align=left>") + mylink
+    + F("</td><td><td align=right valign=bottom>程序编译时间: <mark>") + String(ymd) + F(" " __TIME__ "</mark></td></tr></table><br>编译参数:<br>" BUILD_SET "</body></html>");
 }
 uint32_t ap_on_time = 120000;
 void handleRoot() {
