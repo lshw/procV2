@@ -116,7 +116,7 @@ void update_disp() {
       snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" OTA %s -" VER "-  "), WiFi.localIP().toString().c_str());
     } else {
       if (year != 0)
-        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" 20%02d-%02d-%02d %02d-%02d  %s  "), year, month, day, hour, minute, WiFi.localIP().toString().c_str());
+        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s   20%02d-%02d-%02d %02d-%02d  "), year, month, day, hour, minute, WiFi.localIP().toString().c_str());
       else
         snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s "), WiFi.localIP().toString().c_str());
     }
