@@ -154,33 +154,15 @@ void loop()
         return;
       }
       httpd_loop();
-      if (wifi_connected_is_ok()) {
-        if (!httpd_up) {
-          ntpclient();
-#ifdef HAVE_AUTO_UPDATE
-          wget();
-#endif
-          update_disp();
-          zmd();
-          httpd_up = true;
-        }
+      if (WiFi_isConnected()) {
         ota_loop();
-      } else
-        ap_loop();
+      }
+      ap_loop();
       break;
     default:
-      if (wifi_connected_is_ok()) {
-        proc_loop();
-        if (!httpd_up) {
-          update_disp();
-          ntpclient();
-#ifdef HAVE_AUTO_UPDATE
-          wget();
-#endif
-          httpd_up = true;
-          httpd_listen();
-        }
+      if (WiFi_isConnected()) {
         httpd_loop();
+        proc_loop();
       } else if (millis() > 30000) { //30秒不能登陆网络进smart_config
         smart_config();
         ESP.restart();
@@ -191,17 +173,17 @@ void loop()
     run_zmd = false;
     zmd();
   }
+#ifdef HAVE_AUTO_UPDATE
   if (update_timeok == 0) {
     if (update_time > 0)
       update_timeok = update_time * 60;
     else
       update_timeok = -1; //停止;
     yield();
-#ifdef HAVE_AUTO_UPDATE
     wget();
     yield();
-#endif
   }
+#endif
   if (nvram.change != 0) save_nvram();
   if (set_change) set_save();
   system_soft_wdt_feed();
