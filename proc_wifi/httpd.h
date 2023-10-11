@@ -272,7 +272,7 @@ void set_php() {
                 + F("ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp; ")
                 + F("信号:<mark>") + String(WiFi.RSSI()) + F("</mark>dbm &nbsp; ")
                 + F("ip:<mark>") + WiFi.localIP().toString() + F("</mark> &nbsp; ")
-                + F("电压:<mark>") + String(v) + F("</mark>V<br>");
+                + F("电压:<mark>") + String(v) + F("</mark>V &nbsp;剩余内存:<mark>") + String(ESP.getFreeHeap()) + F("</mark><br>");
   }
   String comset_option;
   for (uint8_t i = 0; i < sizeof(comsets) / sizeof(SerialConfig); i++) comset_option += F("<option value=") + String(i) + ">" + comset_str[i] + F("</option>");
