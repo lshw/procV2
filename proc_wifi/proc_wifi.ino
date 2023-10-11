@@ -23,15 +23,7 @@ void setup()
     _24v_out = HIGH;
   else
     _24v_out = LOW;
-  wifi_country_t mycountry =
-  {
-    .cc = "CN",
-    .schan = 1,
-    .nchan = 13,
-    .policy = WIFI_COUNTRY_POLICY_MANUAL,
-  };
-
-  wifi_set_country(&mycountry);
+  wifi_set_opmode(STATION_MODE);
   wifi_station_connect();
   get_pcb_ver();
   analogWriteFreq(400);

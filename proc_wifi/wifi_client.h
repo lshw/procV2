@@ -25,6 +25,8 @@ void wifi_setup() {
   boolean is_ssid = true;
   WiFi.setAutoConnect(true);//自动链接上次
   WiFi.setAutoReconnect(true);//断线自动重连
+  wifi_station_set_auto_connect(1);
+  wifi_station_set_reconnect_policy(true);
   if (proc == OTA_MODE) { //ota时要 ap 和 client
     WiFi.mode(WIFI_AP_STA);
     AP();
