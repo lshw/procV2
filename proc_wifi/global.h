@@ -104,7 +104,7 @@ void test();
 uint8_t test_t = 0;
 float get_batt();
 float v;
-uint8_t year, month = 1, day = 1, hour = 0, minute = 0, sec = 0;
+uint8_t year = 0, month = 1, day = 1, hour = 0, minute = 0, sec = 0;
 DNSServer dnsServer;
 void update_disp() {
   uint8_t zmdsize = strlen(zmd_disp);
@@ -113,7 +113,7 @@ void update_disp() {
       snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" OTA %s -" VER "-  "), WiFi.localIP().toString().c_str());
     } else {
       if (year != 0)
-        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s   20%02d-%02d-%02d %02d-%02d  "), year, month, day, hour, minute, WiFi.localIP().toString().c_str());
+        snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s   20%02d-%02d-%02d %02d-%02d  "), WiFi.localIP().toString().c_str(), year, month, day, hour, minute);
       else
         snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" %s "), WiFi.localIP().toString().c_str());
     }
