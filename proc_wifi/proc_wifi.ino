@@ -71,9 +71,9 @@ void setup()
     case SMART_CONFIG_MODE:
       nvram.proc = 0;//ota以后，
       nvram.change = 1;
+      save_nvram();
       disp(F("CO  "));
       smart_config();
-      save_nvram();
       ESP.restart();
     default:
       proc_setup();
@@ -118,6 +118,8 @@ void loop()
       if (ota_timeout < millis()) {
         nvram.proc = 0;
         proc = 0;
+        nvram.change = 1;
+        save_nvram();
         ESP.restart();
         return;
       }
@@ -127,6 +129,8 @@ void loop()
         Serial.println(F("Smartconfig OK"));
         disp(F("6.6.6.6.6."));
         proc = 0;
+        nvram.change = 1;
+        save_nvram();
         ESP.restart();
         return;
       }

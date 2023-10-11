@@ -42,6 +42,7 @@ void ota_loop() {
       if (nvram.proc != 0 ) {
         nvram.proc = 0;
         nvram.change = 1;
+        save_nvram();
       }
       delay(2000);
       ESP.restart();

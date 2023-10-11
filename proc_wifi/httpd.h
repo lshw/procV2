@@ -643,6 +643,7 @@ void ap_loop() {
         if (nvram.proc != 0) {
           nvram.proc = 0;
           nvram.change = 1;
+          save_nvram();
         }
         disp(F("00000"));
         ht16c21_cmd(0x84, 0);
