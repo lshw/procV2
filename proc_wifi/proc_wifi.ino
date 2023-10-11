@@ -64,7 +64,12 @@ void setup()
       wdt_disable();
       nvram.proc = SMART_CONFIG_MODE;//ota以后，
       nvram.change = 1;
+      save_nvram();
       disp(F(" OTA "));
+      delay(1000);
+      nvram.proc = 0;
+      nvram.change = 1;
+      save_nvram();
       ota_setup();
       httpd_listen();
       break;
@@ -73,16 +78,27 @@ void setup()
       nvram.change = 1;
       save_nvram();
       disp(F("CO  "));
+      delay(1000);
+      nvram.proc = 0;
+      nvram.change = 1;
+      save_nvram();
       smart_config();
       ESP.restart();
+      break;
     default:
       proc_setup();
       if (nvram.proc != OTA_MODE) {
         nvram.proc = OTA_MODE;
         nvram.change = 1;
+        save_nvram();
       }
       sprintf(disp_buf, " %3.2f ", v);
       disp(disp_buf);
+      delay(1000);
+      nvram.proc = 0;
+      nvram.change = 1;
+      save_nvram();
+      httpd_listen();
       break;
   }
   save_nvram();
@@ -106,7 +122,6 @@ void setup()
       ping_status = -1;
     return true;
   });
-
 }
 
 bool httpd_up = false;

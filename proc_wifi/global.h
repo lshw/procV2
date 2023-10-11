@@ -10,8 +10,6 @@ CRC32 crc;
 #include "ht16c21.h"
 #include "Ticker.h"
 uint8_t pcb_ver = 0;
-uint16_t timer1 = 0; //秒 定时测温
-uint16_t timer2 = 0; //秒
 char disp_buf[22];
 bool telnet_auth = false;
 bool run_zmd = true;
@@ -106,7 +104,6 @@ uint8_t test_t = 0;
 float get_batt();
 float v;
 uint8_t year, month = 1, day = 1, hour = 0, minute = 0, sec = 0;
-uint8_t timer3 = 10;
 DNSServer dnsServer;
 bool wifi_connected_is_ok();
 void update_disp() {
@@ -130,17 +127,6 @@ void update_disp() {
 }
 void timer1s() {
   char mdays;
-  if (timer3 > 0) {
-    if (timer3 == 1) {
-      if (nvram.proc != 0) {
-        nvram.proc = 0;
-        nvram.change = 1;
-      }
-    }
-    timer3--;
-  }
-  if (timer1 > 0) timer1--;//定时器1 测温
-  if (timer2 > 0) timer2--;//定时器2
   sec++;
   if (sec >= 60) {
     sec = 0;
