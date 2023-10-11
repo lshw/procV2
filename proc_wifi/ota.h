@@ -7,10 +7,12 @@
 extern void disp(char *);
 extern float get_batt();
 extern uint32_t ap_on_time;
+bool updating = false;
 extern DNSServer dnsServer;
 void ota_setup() {
   ArduinoOTA.onStart([]() {
     String type;
+    updating = true;
     if (nvram.proc != 0 && nvram.nvram7 != (nvram.nvram7 | NVRAM7_UPDATE)) {
       nvram.proc = 0;
       nvram.nvram7 |= NVRAM7_UPDATE;

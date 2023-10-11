@@ -115,6 +115,7 @@ uint16_t http_get(uint8_t no) {
               && disp_buf[4] == 'T'
               && disp_buf[5] == 'E') {
           SPIFFS.begin();
+          updating = true;
           if (http_update() == false)
             http_update();
           delay(180);

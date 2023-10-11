@@ -20,6 +20,7 @@ char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
 extern char day_cron[6];
 extern bool connected_is_ok;
+extern bool updating;
 extern int8_t day_cron_hour, day_cron_minute;
 extern uint32_t day_cron_delay; //每天执行完day_cron_delay后， 要延迟一下
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换

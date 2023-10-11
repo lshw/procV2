@@ -618,6 +618,7 @@ void httpd_listen() {
       WiFiUDP::stopAll();
       uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
       Update.begin(maxSketchSpace); //start with max available size
+      updating = true;
       crc.reset();
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       crc.update((uint8_t *)upload.buf, upload.currentSize);
@@ -641,16 +642,17 @@ void ap_loop() {
   dnsServer.processNextRequest();
   httpd_loop();
   ArduinoOTA.handle();
+  system_soft_wdt_feed ();
   if (ms0 < millis()) {
-    get_batt();
-    system_soft_wdt_feed ();
-    ms0 = (ap_on_time - millis()) / 1000;
-    if (ms0 < 10) sprintf_P(disp_buf, PSTR("AP  %d"), ms0);
-    else if (ms0 < 100) sprintf_P(disp_buf, PSTR("AP %d"), ms0);
-    else sprintf_P(disp_buf, PSTR("AP%d"), ms0);
-    ms0 = millis() + 1000;
-    disp(disp_buf);
-
+    if (!connected_is_ok || !updating) {
+      get_batt();
+      ms0 = (ap_on_time - millis()) / 1000;
+      if (ms0 < 10) sprintf_P(disp_buf, PSTR("AP  %d"), ms0);
+      else if (ms0 < 100) sprintf_P(disp_buf, PSTR("AP %d"), ms0);
+      else sprintf_P(disp_buf, PSTR("AP%d"), ms0);
+      ms0 = millis() + 1000;
+      disp(disp_buf);
+    }
     yield();
     if ( millis() > ap_on_time) {
       if (millis() < 1800000 ) ap_on_time = millis() + 200000; //有外接电源的情况下，最长半小时
