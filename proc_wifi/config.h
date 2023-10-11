@@ -4,7 +4,7 @@
 #define VER "1.70"
 #define VERA ""
 #define CRC_MAGIC 4
-#define HAVE_AUTO_UPDATE
+//#define HAVE_AUTO_UPDATE
 
 #define _24V_OUT 13
 #define PC_RESET 15
