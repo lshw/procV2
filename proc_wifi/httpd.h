@@ -19,6 +19,7 @@ char day_cron[6];
 int8_t day_cron_hour = -1, day_cron_minute = -1;
 
 void httpd_send_200(String javascript) {
+  ota_timeout = millis() + 3600000; //有web就延迟1小时
   httpd.sendHeader( "charset", "utf-8" );
   httpd.send(200, "text/html", F("<html>"
                                  "<head>"

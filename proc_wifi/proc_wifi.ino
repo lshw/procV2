@@ -7,6 +7,7 @@ extern "C" {
 #include "global.h"
 #include "ntp.h"
 String hostname = HOSTNAME;
+uint32_t ota_timeout;
 
 #include "ota.h"
 #include "wifi_client.h"
@@ -16,6 +17,7 @@ String hostname = HOSTNAME;
 #include <Pinger.h>
 Pinger pinger;
 int8_t ping_status = 0;
+
 void setup()
 {
   load_nvram();
@@ -58,6 +60,7 @@ void setup()
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
+      ota_timeout = 3600000; //1小时
       wdt_disable();
       nvram.proc = SMART_CONFIG_MODE;//ota以后，
       nvram.change = 1;
@@ -112,6 +115,12 @@ void loop()
 {
   switch (proc) {
     case OTA_MODE:
+      if (ota_timeout < millis()) {
+        nvram.proc = 0;
+        proc = 0;
+        ESP.restart();
+        return;
+      }
       if (WiFi.smartConfigDone()) {
         wifi_set_clean();
         wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());

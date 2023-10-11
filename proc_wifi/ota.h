@@ -31,6 +31,7 @@ void ota_setup() {
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     sprintf(disp_buf, "OTA.%02d", progress * 99 / total );
     disp(disp_buf);
+    ota_timeout = millis() + 36000000;
   });
   ArduinoOTA.begin();
 }
