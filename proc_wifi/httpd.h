@@ -13,7 +13,6 @@ void ht16c21_cmd(uint8_t cmd, uint8_t dat);
 
 ESP8266WebServer httpd(80);
 String head, footer;
-String mylink;
 String body;
 char day_cron[6];
 int8_t day_cron_hour = -1, day_cron_minute = -1;
@@ -122,7 +121,7 @@ void update_head_footer() {
   head +=   F("<button onclick=\"if(ajax_if('/switch.php?b=reboot','重启proc?')) setTimeout(function(){window.location.reload();},15000);\">重启proc</button>");
 
   footer = F("<hr>")
-           + mylink
+           + mylink()
            + F("<hr>程序编译时间: <mark>") + String(ymd)
            + F(" " __TIME__ "</mark><br>"
                "编译参数:<br>"
@@ -315,7 +314,7 @@ void set_php() {
            "<hr>每日定时开机(hh:mm):<input type=text name=day_cron size=6 value='") + String(day_cron) + F("'>清空关闭"
                "<hr>主机ip:<input type=text name=master_ip size=20 value='") + master_ip.toString() + F("'>"
                    "<hr>自定义html块(页面左下角,清空恢复原始设置):<br>"
-                   "<textarea style='width:500px;height:80px;' name=mylink>") + mylink + F("</textarea><br>"
+                   "<textarea style='width:500px;height:80px;' name=mylink>") + mylink() + F("</textarea><br>"
                        "<hr><input type=submit name=submit value=保存>"
                        "</form>"
                        "<hr>"
@@ -450,10 +449,9 @@ void save_php() {
       fp.print(update_time);
       fp.close();
     } else if (httpd.argName(i).compareTo("mylink") == 0) {
-      if (mylink != httpd.arg(i)) {
-        mylink = data;
+      if (mylink() != httpd.arg(i)) {
         fp = SPIFFS.open("/mylink.txt", "w");
-        fp.println(mylink);
+        fp.println(data);
         fp.close();
         update_head_footer();
       }

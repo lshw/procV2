@@ -18,7 +18,6 @@ int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 char www_username[100] = "root";
 char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
-extern String mylink;
 extern char day_cron[6];
 extern bool connected_is_ok;
 extern int8_t day_cron_hour, day_cron_minute;
@@ -354,7 +353,8 @@ void get_http_auth() {
   return;
 }
 
-void get_mylink() {
+String mylink() {
+  String mylink;
   File fp;
   if (SPIFFS.begin()) {
     fp = SPIFFS.open("/mylink.txt", "r");
@@ -365,6 +365,7 @@ void get_mylink() {
   }
   mylink.trim();
   if (mylink == "") mylink = F("在线文档:\r<a href=https://www.bjlx.org.cn/node/929>https://www.bjlx.org.cn/node/929</a>");
+  return mylink;
 }
 
 void get_day_cron() {

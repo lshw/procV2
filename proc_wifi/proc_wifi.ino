@@ -117,7 +117,6 @@ void setup()
     delay(200);
     yield();
   }
-  get_mylink(); //定制的web左下角
   pinger.OnEnd([](const PingerResponse & response) {
     if (response.TotalSentRequests == response.TotalReceivedResponses)
       ping_status = 1;
