@@ -145,7 +145,6 @@ void loop()
       if (WiFi.smartConfigDone()) {
         wifi_set_clean();
         wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
-        Serial.println(F("Smartconfig OK"));
         disp(F("6.6.6.6.6."));
         proc = 0;
         nvram.change = 1;
@@ -224,15 +223,12 @@ bool smart_config() {
   if (connected_is_ok) return true;
   WiFi.mode(WIFI_STA);
   WiFi.beginSmartConfig();
-  Serial.println(F("SmartConfig start"));
   for (uint8_t i = 0; i < 100; i++) {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
-      Serial.println(F("OK"));
       return true;
     }
-    Serial.write('.');
     delay(1000);
     snprintf_P(disp_buf, sizeof(disp_buf), PSTR("CON%02d"), i);
     disp(disp_buf);

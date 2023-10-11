@@ -196,9 +196,8 @@ bool WiFi_isConnected() {
   return false;
 }
 bool wait_connected(uint16_t ms) {
-  while (millis() < ms && !WiFi_isConnected() && Serial.available() == 0) {
+  while (millis() < ms && !WiFi_isConnected()) {
     yield();
-    Serial.write('.');
     delay(200);
   }
   return WiFi_isConnected();

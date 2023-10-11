@@ -607,10 +607,6 @@ void httpd_listen() {
       Update.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
       yield();
-      if (crc.finalize() != CRC_MAGIC)
-        Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
-      else
-        Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
       Update.end(true);
     }
   });
