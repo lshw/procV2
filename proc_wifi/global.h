@@ -20,6 +20,7 @@ char www_password[100] = "admin";
 Ticker _myTicker, pcResetTicker, pcPowerTicker, ota_test;
 extern String mylink;
 extern char day_cron[6];
+extern bool connected_is_ok;
 extern int8_t day_cron_hour, day_cron_minute;
 extern uint32_t day_cron_delay; //每天执行完day_cron_delay后， 要延迟一下
 uint8_t proc; //用lcd ram 0 传递过来的变量， 用于通过重启，进行功能切换
@@ -105,10 +106,9 @@ float get_batt();
 float v;
 uint8_t year, month = 1, day = 1, hour = 0, minute = 0, sec = 0;
 DNSServer dnsServer;
-bool wifi_connected_is_ok();
 void update_disp() {
   uint8_t zmdsize = strlen(zmd_disp);
-  if (wifi_connected_is_ok()) {
+  if (connected_is_ok) {
     if (proc == OTA_MODE) {
       snprintf_P(zmd_disp, sizeof(zmd_disp), PSTR(" OTA %s -" VER "-  "), WiFi.localIP().toString().c_str());
     } else {
@@ -409,7 +409,7 @@ void pcResetUp() {
 
 void zmd() {  //1s 一次Ticker
   uint8_t i = 0, i0 = 0;
-  if (!wifi_connected_is_ok()) return;
+  if (!connected_is_ok) return;
   zmd_size = strlen(zmd_disp);
   if (zmd_size == 0) return;
   if (zmd_size < zmd_offset) zmd_offset = 0;

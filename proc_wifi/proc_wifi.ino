@@ -38,7 +38,8 @@ void setup()
   digitalWrite(PC_POWER, LOW);
   ht16c21_setup();
   ht16c21_cmd(0x88, 1); //闪烁
-
+  wifi_set_opmode(STATION_MODE);
+  wifi_station_connect();
   get_comset();
   get_otherset();
   Serial.begin(rate, comsets[comset]);
@@ -56,10 +57,10 @@ void setup()
   get_batt();
   get_day_cron();
   proc = nvram.proc;
-  wifi_setup();
   if (millis() > 10000) proc = 0; //程序升级后第一次启动
   switch (proc) {
     case OTA_MODE:
+      wifi_setup();
       ota_timeout = 3600000; //1小时
       wdt_disable();
       nvram.proc = SMART_CONFIG_MODE;//ota以后，
@@ -86,6 +87,7 @@ void setup()
       ESP.restart();
       break;
     default:
+      wifi_setup();
       proc_setup();
       if (nvram.proc != OTA_MODE) {
         nvram.proc = OTA_MODE;
@@ -101,6 +103,7 @@ void setup()
       httpd_listen();
       break;
   }
+  wait_connected(2000);
   save_nvram();
   update_disp();
   zmd();
@@ -122,6 +125,7 @@ void setup()
       ping_status = -1;
     return true;
   });
+  wait_connected(5000);
 }
 
 bool httpd_up = false;
@@ -235,7 +239,7 @@ bool smart_config() {
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   nvram.proc = 0;
   nvram.change = 1;
-  if (wifi_connected_is_ok()) return true;
+  if (connected_is_ok) return true;
   WiFi.mode(WIFI_STA);
   WiFi.beginSmartConfig();
   Serial.println(F("SmartConfig start"));

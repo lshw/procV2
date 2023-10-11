@@ -267,7 +267,7 @@ void set_php() {
     wifi_scan = "<a href=/set.php?wifi_scan=1><buttom>扫描WiFi</buttom></a>";
   }
 
-  if (wifi_connected_is_ok()) {
+  if (connected_is_ok) {
     wifi_stat = F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp; ")
                 + F("ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp; ")
                 + F("信号:<mark>") + String(WiFi.RSSI()) + F("</mark>dbm &nbsp; ")

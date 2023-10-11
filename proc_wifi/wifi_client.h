@@ -78,15 +78,7 @@ void wifi_setup() {
     SPIFFS.end();
   }
 }
-bool wifi_connected_is_ok() {
-  if (WiFiMulti.run() == WL_CONNECTED)
-  {
-    ht16c21_cmd(0x88, 0); //停止闪烁
-    return true;
-  }
-  ht16c21_cmd(0x88, 0); //开始闪烁
-  return false;
-}
+
 #ifdef HAVE_AUTO_UPDATE
 uint16_t http_get(uint8_t no) {
   char key[17];
@@ -181,4 +173,34 @@ bool http_update()
   return false;
 }
 #endif //HAVE_AUTO_UPDATE
+
+bool connected_is_ok = false;
+bool fast_wifi = true;
+bool WiFi_isConnected() {
+  yield();
+  if (connected_is_ok) {
+    ht16c21_cmd(0x88, 0); //停止闪烁
+    return connected_is_ok;
+  }
+  if (WiFiMulti.run() == WL_CONNECTED) {
+    connected_is_ok = true;
+    ntpclient();
+#ifdef HAVE_AUTO_UPDATE
+    wget();
+#endif
+    update_disp();
+    ht16c21_cmd(0x88, 0); //停止闪烁
+    return true;
+  }
+  ht16c21_cmd(0x88, 1); //开始闪烁
+  return false;
+}
+bool wait_connected(uint16_t ms) {
+  while (millis() < ms && !WiFi_isConnected() && Serial.available() == 0) {
+    yield();
+    Serial.write('.');
+    delay(200);
+  }
+  return WiFi_isConnected();
+}
 #endif __WIFI_CLIENT_H__
