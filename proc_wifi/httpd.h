@@ -146,7 +146,7 @@ void handleRoot() {
   for (uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
     if (tcpClients[i]) { // equivalent to !tcpClients[i].connected()
       telnets += F("<tr align=center><td><input type=checkbox");
-      if (client_enable[i]) body += F(" checked");
+      if (client_enable[i]) telnets += F(" checked");
       telnets += F(" onclick=ajax_get('/telnet_client.php?id=") + String(i) + F("&checked='+this.checked); >#") + String(i + 1) + F("<td>") + tcpClients[i].remoteIP().toString() + ":" + String(tcpClients[i].remotePort()) + F("</td><td>") + String((millis() - client_ms[i]) / 1000) + F("</td><td>") + String(client_read[i]) + F("</td></tr>");
     }
   if (telnets != "") body += F("<hr><table border=1><tr align=center><td>允许</td><td>IP:PORT</td><td>时长(秒)</td><td>接收字节</td></tr>") + telnets + F("</table>");
