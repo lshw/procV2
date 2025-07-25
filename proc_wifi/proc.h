@@ -20,7 +20,7 @@ void proc_loop() {
     //寻找一个空闲或者断开的位置
     int i;
     for (i = 0; i < MAX_SRV_CLIENTS; i++)
-      if (!tcpClients[i]) { // equivalent to !tcpClients[i].connected()
+      if (!tcpClients[i].connected()) { // equivalent to !tcpClients[i].connected()
         tcpClients[i] = tcpServer.available();
         client_read[i] = 0;
         client_ms[i] = millis();
@@ -28,7 +28,7 @@ void proc_loop() {
           client_enable[i] = 1;
         else {
           client_enable[i] = 0; //等待web认证
-          tcpClients[i].println(F("to web, enable this link.#") + String(i + 1));
+          tcpClients[i].println(F("\r\nto web, enable this link.#") + String(i + 1) );
         }
         break;
       }
@@ -40,6 +40,8 @@ void proc_loop() {
   }
   yield();
   for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
+    if (!tcpClients[i].connected())
+      continue;
     if (client_enable[i] && tcpClients[i].availableForWrite()) { //tcp可以写
       if (client_enable[i] == 2) {
         tcpClients[i].println(F("--ok! enabled. #") + String(i + 1) + F("--"));
@@ -56,20 +58,29 @@ void proc_loop() {
   }
   yield();
   size_t len = Serial.available();
-  for (int i = 0; i < MAX_SRV_CLIENTS; i++)
-    if (tcpClients[i]) {
-      size_t afw = tcpClients[i].availableForWrite(); //tcp可以写
-      if (len > afw ) len = afw;
-    }
+  for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
+    if (!tcpClients[i].connected())
+      continue;
+    if (client_enable[i] == 0)
+      continue;
+    size_t afw = tcpClients[i].availableForWrite(); //tcp可以写
+    if (len > afw ) len = afw;
+  }
   if (len > SBUF_SIZE ) len = SBUF_SIZE;
   if (len) {
     size_t serial_got = Serial.readBytes(sbuf, len);
-    for (int i = 0; i < MAX_SRV_CLIENTS; i++)
+    for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
+      if (!tcpClients[i])
+        continue;
+      if (client_enable[i] == 0) //未输入密码
+        continue;
       if (tcpClients[i].availableForWrite() >= serial_got) {
         size_t tcp_sent = tcpClients[i].write(sbuf, serial_got);
       }
+    }
   }
 }
+
 void net_log(String msg) {
   for (int i = 0; i < MAX_SRV_CLIENTS; i++)
     if (client_enable[i] && tcpClients[i].availableForWrite())
