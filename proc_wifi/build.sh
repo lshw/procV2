@@ -32,11 +32,14 @@ fi
 
 cd ..
 CRC_MAGIC=$( grep CRC_MAGIC ${project}/config.h | awk '{printf $3}' )
-branch=`git branch |grep "^\*" |awk '{print $2}'`
-a=`git rev-parse --short HEAD`
-date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
+
+branch=$( git branch |grep "^\*" |awk '{print $2}' )
+a=$( git log --date=short -1 $project |grep ^commit |awk '{print $2}' )
+date=$( git log --date=short -1 $project |grep ^Date: |awk '{print $2}' |tr -d '-' )
+git_id=${a:0:7}
 ver=$date-${a:0:7}
 echo $ver
+
 export COMMIT=$ver
 
 build=/tmp/${me}_${project}_build
